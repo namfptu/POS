@@ -1,0 +1,9 @@
+spring:
+  application:
+    baseUrl: ${SPRING_APPLICATION_BASE_URL:http://localhost:8888}
+    name: ${SPRING_APPLICATION_NAME:bejava}
+  datasource:
+    url: jdbc:postgresql://localhost:5432/pos
+    username: postgres
+    password: 1234
+    driver-class-name: ${SPRING_DATASOURCE_DRIVER:org.postgresql.Driver}
