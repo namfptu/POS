@@ -45,13 +45,59 @@ public class JwtTokenProvider {
     public String generateTokenFromUserId(Integer userId) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + jwtExpirationInMs);
-        
+
         return Jwts.builder()
             .setSubject(String.valueOf(userId))
             .setIssuedAt(now)
             .setExpiration(expiryDate)
             .signWith(getSigningKey(), SignatureAlgorithm.HS512)
             .compact();
+    }
+
+    /**
+     * Generate temporary reset token (short expiration - 15 minutes)
+     * Used only for password reset flow
+     */
+    public String generatePasswordResetToken(Integer userId, String email) {
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + 15 * 60 * 1000); // 15 minutes
+
+        return Jwts.builder()
+            .setSubject(String.valueOf(userId))
+            .claim("email", email)
+            .claim("type", "password_reset")
+            .setIssuedAt(now)
+            .setExpiration(expiryDate)
+            .signWith(getSigningKey(), SignatureAlgorithm.HS512)
+            .compact();
+    }
+
+    /**
+     * Validate password reset token
+     * Returns userId if valid, throws exception if invalid
+     */
+    public Integer validatePasswordResetToken(String token) {
+        try {
+            Claims claims = Jwts.parserBuilder()
+                .setSigningKey(getSigningKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+
+            // Check if token type is password_reset
+            String tokenType = claims.get("type", String.class);
+            if (!"password_reset".equals(tokenType)) {
+                throw new IllegalArgumentException("Invalid token type");
+            }
+
+            return Integer.parseInt(claims.getSubject());
+        } catch (ExpiredJwtException ex) {
+            logger.error("Reset token has expired");
+            throw new IllegalArgumentException("Reset token has expired");
+        } catch (Exception ex) {
+            logger.error("Invalid reset token: {}", ex.getMessage());
+            throw new IllegalArgumentException("Invalid reset token");
+        }
     }
     
     public Integer getUserIdFromToken(String token) {

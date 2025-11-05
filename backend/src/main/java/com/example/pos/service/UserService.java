@@ -19,6 +19,7 @@ public class UserService {
     @Transactional(readOnly = true)
     public UserDTO getCurrentUser(Authentication authentication) {
         UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+
         User user = userRepository.findById(userPrincipal.getId())
             .orElseThrow(() -> new ResourceNotFoundException("User", "id", userPrincipal.getId()));
         
