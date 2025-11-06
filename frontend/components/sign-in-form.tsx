@@ -43,7 +43,7 @@ export function SignInForm() {
         {/* Logo */}
         <div className="mb-8">
       <div className="flex justify-center items-center">
-        <img src="/1.png" alt="My Logo" className="w-10 h-10" />
+        <img src="/logo.svg" alt="My Logo" className="h-12 w-auto" />
 
           </div>
         </div>
@@ -106,7 +106,7 @@ export function SignInForm() {
               />
               <span className="text-gray-700">Remember Me</span>
             </label>
-            <Link href="#" className="text-orange-500 hover:text-orange-600 font-medium">
+            <Link href="/forgot-password" className="text-orange-500 hover:text-orange-600 font-medium">
               Forgot Password?
             </Link>
           </div>

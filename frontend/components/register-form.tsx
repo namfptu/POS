@@ -51,7 +51,7 @@ export function RegisterForm() {
         {/* Logo */}
         <div className="mb-8">
           <div className="flex justify-center items-center">
-            <img src="/1.png" alt="My Logo" className="w-10 h-10" />
+            <img src="/logo.svg" alt="My Logo" className="h-12 w-auto" />
           </div>
         </div>
 

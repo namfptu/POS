@@ -8,7 +8,7 @@ export default function RegisterPage() {
 
       {/* Right side - Illustration */}
       <div className="hidden md:flex items-center justify-center p-0">
-        <img src="/illustration.png" alt="Illustration" className="w-full h-full object-cover" />
+        <img src="/5.png" alt="Illustration" className="w-full h-full object-cover" />
       </div>
     </div>
   )
