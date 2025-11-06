@@ -9,7 +9,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Eye, EyeOff } from "lucide-react"
 import { Facebook, Chrome, Apple } from "lucide-react"
-import { login } from "@/lib/api" // Import hàm login từ tệp api.ts của bạn
+import { useAuth } from "@/context/auth-context"; // Import useAuth
 
 export function SignInForm() {
   const [email, setEmail] = useState("")
@@ -18,18 +18,17 @@ export function SignInForm() {
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const router = useRouter()
+  const { login } = useAuth(); // Use login from AuthContext
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
 
     try {
-      const response = await login({ email, password })
-      console.log("Login successful:", response)
-      // Chuyển hướng đến dashboard sau khi đăng nhập thành công
-      router.push('/dashboard')
+      await login({ email, password })
+      console.log("Login successful:")
+      router.push('/dashboard') // Redirect to dashboard
     } catch (error) {
-      // Xử lý lỗi đăng nhập, ví dụ hiển thị thông báo lỗi
       console.error("Login failed:", error)
       alert("Đăng nhập thất bại. Vui lòng kiểm tra lại email và mật khẩu.")
     } finally {

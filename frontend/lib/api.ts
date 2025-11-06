@@ -13,7 +13,10 @@ const api = axios.create({
 // Hàm gọi API để đăng ký người dùng mới
 export const register = async (userData: { name: string; email: string; password: string }) => {
   try {
-    const response = await api.post('/auth/register', userData);
+    const response = await api.post<{
+      message: string;
+      user: { id: string; name: string; email: string; role: string };
+    }>('/auth/register', userData);
     return response.data;
   } catch (error) {
     console.error('Error during registration:', error);
@@ -24,7 +27,10 @@ export const register = async (userData: { name: string; email: string; password
 // Hàm gọi API để đăng nhập
 export const login = async (credentials: { email: string; password: string }) => {
   try {
-    const response = await api.post('/auth/login', credentials);
+    const response = await api.post<{
+      message: string;
+      user: { id: string; name: string; email: string; role: string };
+    }>('/auth/login', credentials);
     return response.data;
   } catch (error) {
     console.error('Error during login:', error);
