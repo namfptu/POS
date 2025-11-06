@@ -22,7 +22,7 @@
 └─────────────────────────────────────────────────────────────┘
                             ↓
 ┌─────────────────────────────────────────────────────────────┐
-│  BƯỚC 3: Nhập Password Mới → Reset                          │
+│  BƯỚC 3: Nhập Password Mới → Reset                             │
 │  POST /api/auth/reset-password                              │
 │  Body: {                                                    │
 │    "resetToken": "eyJhbGc...",                              │

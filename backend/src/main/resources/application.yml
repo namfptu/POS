@@ -21,8 +21,8 @@ spring:
   mail:
     host: ${MAIL_HOST:smtp.gmail.com}
     port: ${MAIL_PORT:587}
-    username: fcpctk@gmail.com
-    password: qezp mjcr nxdu rvud
+    username: haonv@xtransform.vn
+    password: ccif uspx kyav wafx
 
 
 
