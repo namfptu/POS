@@ -8,9 +8,7 @@ export function DashboardHeader() {
   return (
     <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between sticky top-0 z-10">
       <div className="flex items-center gap-3 flex-1">
-        <div className="bg-orange-500 text-white rounded-full p-2 flex items-center justify-center">
-          <span className="text-xs font-bold">POS</span>
-        </div>
+      
         <div className="flex-1 max-w-md">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -30,10 +28,6 @@ export function DashboardHeader() {
 
         <Button className="bg-orange-500 hover:bg-orange-600 text-white gap-2">
           <span>+</span> Add New
-        </Button>
-
-        <Button variant="outline" className="gap-2 bg-transparent">
-          POS
         </Button>
 
         <div className="flex items-center gap-3 ml-4 pl-4 border-l border-gray-200">

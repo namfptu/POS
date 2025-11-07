@@ -7,6 +7,7 @@ interface AuthContextType {
   user: { id: string; name: string; email: string; role: string } | null;
   isAuthenticated: boolean;
   role: string | null;
+  accessToken: string | null; // Changed from 'token' to 'accessToken'
   login: (credentials: { email: string; password: string }) => Promise<void>;
   register: (userData: { name: string; email: string; password: string }) => Promise<void>;
   logout: () => void;
@@ -18,14 +19,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthContextType['user']>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [role, setRole] = useState<string | null>(null);
+  const [accessToken, setAccessToken] = useState<string | null>(null); // Changed from 'token' to 'accessToken' state
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
     const storedRole = localStorage.getItem('role');
-    if (storedUser && storedRole) {
+    const storedToken = localStorage.getItem('token'); // Get stored token from localStorage
+    if (storedUser && storedRole && storedToken) {
       setUser(JSON.parse(storedUser));
       setRole(storedRole);
+      setAccessToken(storedToken); // Set accessToken from stored token
       setIsAuthenticated(true);
     }
     setLoading(false);
@@ -36,9 +40,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const response = await apiLogin(credentials);
       setUser(response.user);
       setRole(response.user.role);
+      setAccessToken(response.accessToken); // Save accessToken
       setIsAuthenticated(true);
       localStorage.setItem('user', JSON.stringify(response.user));
       localStorage.setItem('role', response.user.role);
+      localStorage.setItem('token', response.accessToken); // Save accessToken to localStorage under 'token' key
     } catch (error) {
       console.error("Login failed:", error);
       throw error;
@@ -50,9 +56,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const response = await apiRegister(userData);
       setUser(response.user);
       setRole(response.user.role);
+      setAccessToken(response.accessToken); // Save accessToken
       setIsAuthenticated(true);
       localStorage.setItem('user', JSON.stringify(response.user));
       localStorage.setItem('role', response.user.role);
+      localStorage.setItem('token', response.accessToken); // Save accessToken to localStorage under 'token' key
     } catch (error) {
       console.error("Registration failed:", error);
       throw error;
@@ -62,9 +70,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = () => {
     setUser(null);
     setRole(null);
+    setAccessToken(null); // Clear accessToken
     setIsAuthenticated(false);
     localStorage.removeItem('user');
     localStorage.removeItem('role');
+    localStorage.removeItem('token'); // Remove token from localStorage
   };
 
   if (loading) {
@@ -72,7 +82,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, role, login, register, logout }}>
+    <AuthContext.Provider value={{ user, isAuthenticated, role, accessToken, login, register, logout }}> {/* Pass accessToken */}
       {children}
     </AuthContext.Provider>
   );
@@ -85,3 +95,4 @@ export function useAuth() {
   }
   return context;
 }
+

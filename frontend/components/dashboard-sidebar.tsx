@@ -2,6 +2,8 @@
 
 import type React from "react"
 
+import Link from "next/link"; // Import Link
+import { usePathname } from 'next/navigation'; // Import usePathname
 import {
   Menu,
   ClipboardIcon as DashboardIcon,
@@ -26,6 +28,7 @@ interface DashboardSidebarProps {
 }
 
 export function DashboardSidebar({ open, onToggle }: DashboardSidebarProps) {
+  const pathname = usePathname(); // Get current pathname
   return (
     <aside
       className={`${open ? "w-64" : "w-20"} bg-white border-r border-gray-200 transition-all duration-300 flex flex-col overflow-y-auto`}
@@ -33,10 +36,8 @@ export function DashboardSidebar({ open, onToggle }: DashboardSidebarProps) {
       {/* Header */}
       <div className="p-6 flex items-center justify-between border-b border-gray-200">
         <div className={`flex items-center gap-2 ${!open && "hidden"}`}>
-          <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
-            <span className="text-white font-bold text-sm">D</span>
-          </div>
-          <span className="font-bold text-gray-900">DreamsPOS</span>
+          <img src="/logo.svg" alt="DreamsPOS Logo" className="h-8 w-auto" />
+          
         </div>
         <Button variant="ghost" size="sm" onClick={onToggle} className="h-8 w-8 p-0 hover:bg-gray-100">
           <Menu className="w-4 h-4" />
@@ -49,7 +50,8 @@ export function DashboardSidebar({ open, onToggle }: DashboardSidebarProps) {
         {open && <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Main</div>}
 
         <div className="space-y-1">
-          <NavItem icon={<DashboardIcon className="w-5 h-5" />} label="Dashboard" active open={open} />
+          <NavItem icon={<DashboardIcon className="w-5 h-5" />} label="Dashboard" active={pathname === "/dashboard"} open={open} href="/dashboard" />
+          <NavItem icon={<Users className="w-5 h-5" />} label="Customers" active={pathname === "/dashboard/customers"} open={open} href="/dashboard/customers" />
           <NavItem icon={<Users className="w-5 h-5" />} label="Super Admin" open={open} />
         </div>
 
@@ -103,10 +105,11 @@ interface NavItemProps {
   label: string
   active?: boolean
   open: boolean
+  href?: string // Add href prop
 }
 
-function NavItem({ icon, label, active, open }: NavItemProps) {
-  return (
+function NavItem({ icon, label, active, open, href }: NavItemProps) {
+  const content = (
     <button
       className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
         active ? "bg-orange-50 text-orange-600" : "text-gray-700 hover:bg-gray-100"
@@ -117,5 +120,7 @@ function NavItem({ icon, label, active, open }: NavItemProps) {
       {open && <span className="text-sm font-medium">{label}</span>}
       {open && <span className="text-gray-400 ml-auto text-xs">›</span>}
     </button>
-  )
+  );
+
+  return href ? <Link href={href}>{content}</Link> : content;
 }
