@@ -7,7 +7,10 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationPrevious, PaginationNext } from "@/components/ui/pagination";
 import { PlusCircle, Search, Eye, Edit, Trash, FileDown, FileText } from "lucide-react";
-import { getCustomers, Customer, CustomerListResponse } from "@/lib/api";
+import { getCustomers, Customer, CustomerListResponse, createCustomer, updateCustomer, deleteCustomer } from "@/lib/api";
+import { CustomerForm } from "@/components/customer-form";
+import { CustomerDetailModal } from "@/components/customer-detail-modal";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 export default function CustomersPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -18,30 +21,40 @@ export default function CustomersPage() {
     pageSize: 10,
     totalElements: 0,
     totalPages: 0,
+    first: true, // Added first property to initial state
     last: true,
   });
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showAddForm, setShowAddForm] = useState(false); // State to control add customer form visibility
+  const [isSubmitting, setIsSubmitting] = useState(false); // State for form submission loading
+  const [showDetailModal, setShowDetailModal] = useState(false); // State to control detail modal visibility
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null); // State for selected customer details
+  const [showEditForm, setShowEditForm] = useState(false); // State to control edit customer form visibility
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false); // State to control delete confirmation dialog
+  const [customerToDeleteId, setCustomerToDeleteId] = useState<string | null>(null); // State for customer ID to delete
 
   const fetchCustomers = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const params = {
-        page: currentPage - 1,
+      const fetchedStatus = filterStatus === "All" ? undefined : filterStatus.toUpperCase() as "ACTIVE" | "INACTIVE";
+
+      const data = await getCustomers({
+        page: currentPage - 1, // Adjust page to be 0-indexed for API
         size: pageSize,
         search: searchQuery || undefined,
-        status: filterStatus === "All" ? undefined : filterStatus,
-      };
-      const data = await getCustomers(params);
+        status: fetchedStatus,
+      });
       setCustomers(data.customers);
       setPagination({
         pageNo: data.pageNo,
         pageSize: data.pageSize,
         totalElements: data.totalElements,
         totalPages: data.totalPages,
+        first: data.first, // Set first from API response
         last: data.last,
       });
     } catch (err) {
@@ -51,6 +64,20 @@ export default function CustomersPage() {
       setIsLoading(false);
     }
   }, [currentPage, pageSize, searchQuery, filterStatus]);
+
+  const handleCreateCustomer = useCallback(async (customerData: Omit<Customer, 'id' | 'createdAt'>) => {
+    setIsSubmitting(true);
+    try {
+      await createCustomer(customerData);
+      alert("Customer added successfully!");
+      fetchCustomers(); // Reload customer list
+    } catch (error) {
+      console.error("Error creating customer:", error);
+      alert("Failed to add customer. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [fetchCustomers]); // Add fetchCustomers to dependencies
 
   useEffect(() => {
     fetchCustomers();
@@ -65,20 +92,82 @@ export default function CustomersPage() {
     setCurrentPage(1); // Reset to first page on size change
   };
 
+  const handleViewCustomer = useCallback((customer: Customer) => {
+    setSelectedCustomer(customer);
+    setShowDetailModal(true);
+  }, []);
+
+  const handleEditCustomer = useCallback((customer: Customer) => {
+    setSelectedCustomer(customer);
+    setShowEditForm(true);
+  }, []);
+
+  const handleUpdateCustomer = useCallback(async (customerData: Omit<Customer, 'id' | 'createdAt'>, id?: string) => {
+    if (!id) {
+      alert("Customer ID is missing for update.");
+      return;
+    }
+
+    // Create a payload that matches UpdateCustomerPayload interface
+    const payload = {
+      name: customerData.name,
+      phone: customerData.phone,
+      country: customerData.country,
+      status: customerData.status, // Ensure status is 'active' or 'inactive' (lowercase)
+      // Add other fields from UpdateCustomerPayload if collected by form
+      imageUrl: customerData.imageUrl // If imageUrl is part of the form and UpdateCustomerPayload
+    };
+
+    setIsSubmitting(true);
+    try {
+      await updateCustomer(id, payload); // Use the new payload
+      alert("Customer updated successfully!");
+      fetchCustomers();
+    } catch (error) {
+      console.error("Error updating customer:", error);
+      alert("Failed to update customer. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [fetchCustomers]);
+
+  const handleDeleteConfirm = useCallback((id: string) => {
+    setCustomerToDeleteId(id);
+    setShowDeleteConfirm(true);
+  }, []);
+
+  const handleDeleteCustomer = useCallback(async () => {
+    if (!customerToDeleteId) return;
+
+    setIsSubmitting(true);
+    try {
+      await deleteCustomer(customerToDeleteId);
+      alert("Customer deleted successfully!");
+      fetchCustomers();
+    } catch (error) {
+      console.error("Error deleting customer:", error);
+      alert("Failed to delete customer. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+      setShowDeleteConfirm(false); // Close the dialog
+      setCustomerToDeleteId(null);
+    }
+  }, [customerToDeleteId, fetchCustomers]);
+
   return (
     <div className="flex-1 space-y-4 p-4 md:p-6">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">Customers</h2>
         <div className="flex items-center space-x-2">
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" className="bg-[#EE2C2C]">
             <FileText className="mr-2 h-4 w-4" />
             PDF
           </Button>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" className="bg-[#00AE72] hover:bg-[#00AE72]/90">
             <FileDown className="mr-2 h-4 w-4" />
             Excel
           </Button>
-          <Button size="sm">
+          <Button size="sm" className="bg-[#FF9025] hover:bg-[#FF9025]/90" onClick={() => setShowAddForm(true)}> {/* Open add customer form */}
             <PlusCircle className="mr-2 h-4 w-4" />
             Add Customer
           </Button>
@@ -112,10 +201,10 @@ export default function CustomersPage() {
       <div className="rounded-md border">
         <Table>
           <TableHeader>
-            <TableRow>
+            <TableRow className="bg-[#F2F2F2]">
               <TableHead className="w-[50px]"><input type="checkbox" className="h-4 w-4" /></TableHead>
               <TableHead>Code</TableHead>
-              <TableHead>Name</TableHead>
+              <TableHead>Customer</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Phone</TableHead>
               <TableHead>Country</TableHead>
@@ -156,15 +245,15 @@ export default function CustomersPage() {
                   <TableCell>{customer.country}</TableCell>
                   <TableCell>
                     <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                      customer.status === "active" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                      customer.status === "active" ? "bg-[#3EB780] text-[#FFFFFF]" : "bg-red-100 text-red-800"
                     }`}>
-                      {customer.status === "active" ? "Active" : "Inactive"}
+                      {customer.status === "active" ? "• Active" : "Inactive"}
                     </span>
                   </TableCell>
                   <TableCell className="flex justify-end gap-2">
-                    <Button variant="ghost" size="icon"><Eye className="h-4 w-4" /></Button>
-                    <Button variant="ghost" size="icon"><Edit className="h-4 w-4" /></Button>
-                    <Button variant="ghost" size="icon"><Trash className="h-4 w-4" /></Button>
+                    <Button variant="ghost" size="icon" onClick={() => handleViewCustomer(customer)}><Eye className="h-4 w-4" /></Button>
+                    <Button variant="ghost" size="icon" onClick={() => handleEditCustomer(customer)}><Edit className="h-4 w-4" /></Button>
+                    <Button variant="ghost" size="icon" onClick={() => handleDeleteConfirm(customer.id)}><Trash className="h-4 w-4" /></Button>
                   </TableCell>
                 </TableRow>
               ))
@@ -177,6 +266,7 @@ export default function CustomersPage() {
         <div className="text-sm text-gray-700">
           Row Per Page{' '}
           <select value={pageSize} onChange={handlePageSizeChange} className="rounded-md border p-1">
+            <option value="5">5</option>
             <option value="10">10</option>
             <option value="20">20</option>
             <option value="30">30</option>
@@ -186,21 +276,70 @@ export default function CustomersPage() {
         <Pagination>
           <PaginationContent>
             <PaginationItem>
-              <PaginationPrevious onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1} />
+              <PaginationPrevious
+                onClick={() => {
+                  if (pagination && !pagination.first) handlePageChange(currentPage - 1);
+                }}
+                className={pagination && pagination.first ? "pointer-events-none opacity-50" : ""}
+              />
             </PaginationItem>
-            {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map((page) => (
-              <PaginationItem key={page}>
-                <PaginationLink onClick={() => handlePageChange(page)} isActive={currentPage === page}>
-                  {page}
+            {Array.from({ length: pagination?.totalPages || 0 }, (_, i) => (
+              <PaginationItem key={i + 1}>
+                <PaginationLink onClick={() => handlePageChange(i + 1)} isActive={currentPage === i + 1}>
+                  {i + 1}
                 </PaginationLink>
               </PaginationItem>
             ))}
             <PaginationItem>
-              <PaginationNext onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === pagination.totalPages} />
+              <PaginationNext
+                onClick={() => {
+                  if (pagination && !pagination.last) handlePageChange(currentPage + 1);
+                }}
+                className={pagination && pagination.last ? "pointer-events-none opacity-50" : ""}
+              />
             </PaginationItem>
           </PaginationContent>
         </Pagination>
       </div>
+
+      <CustomerForm
+        isOpen={showAddForm}
+        onClose={() => setShowAddForm(false)}
+        onSubmit={handleCreateCustomer}
+        isLoading={isSubmitting}
+      />
+
+      <CustomerDetailModal
+        isOpen={showDetailModal}
+        onClose={() => setShowDetailModal(false)}
+        customer={selectedCustomer}
+      />
+
+      <CustomerForm
+        isOpen={showEditForm}
+        onClose={() => setShowEditForm(false)}
+        customer={selectedCustomer || undefined} // Pass selected customer for editing
+        onSubmit={handleUpdateCustomer}
+        isLoading={isSubmitting}
+      />
+
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the customer
+              and remove their data from our servers.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isSubmitting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteCustomer} disabled={isSubmitting} className="bg-red-500 hover:bg-red-600 text-white">
+              {isSubmitting ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

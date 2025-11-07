@@ -112,6 +112,8 @@ export interface Customer {
   email: string;
   phone: string | null;
   country: string | null;
+  companyName: string | null; // Added companyName
+  role: "ADMIN" | "CUSTOMER"; // Added role
   status: "active" | "inactive"; // Updated to match backend response
   imageUrl: string | null; // Added imageUrl field
   createdAt: string; // Assuming createdAt is a string date
@@ -123,6 +125,7 @@ export interface CustomerListResponse {
   pageSize: number;
   totalElements: number;
   totalPages: number;
+  first: boolean; // Added first property
   last: boolean;
 }
 
@@ -141,6 +144,59 @@ export const getCustomers = async (params: {
     return response.data;
   } catch (error) {
     console.error('Error fetching customers:', error);
+    throw error;
+  }
+};
+
+export const getCustomerById = async (id: string) => {
+  try {
+    const response = await api.get<Customer>(`/customers/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching customer with ID ${id}:`, error);
+    throw error;
+  }
+};
+
+export const createCustomer = async (customer: Omit<Customer, 'id' | 'createdAt'>) => {
+  try {
+    const response = await api.post<Customer>('/customers', customer);
+    return response.data;
+  } catch (error) {
+    console.error('Error creating customer:', error);
+    throw error;
+  }
+};
+
+export interface UpdateCustomerPayload {
+  name?: string;
+  phone?: string | null;
+  country?: string | null;
+  companyName?: string | null; // Added companyName
+  role?: "ADMIN" | "CUSTOMER"; // Added role
+  status?: "active" | "inactive";
+  // Add other fields from UpdateUserRequest if they are collected by the frontend form
+  // For example:
+  // companyName?: string | null;
+  // role?: "ADMIN" | "CUSTOMER"; // Or other roles defined in your backend
+  imageUrl?: string | null;
+}
+
+export const updateCustomer = async (id: string, customer: UpdateCustomerPayload) => {
+  try {
+    const response = await api.put<Customer>(`/users/${id}`, customer); // Change endpoint to /users/{id}
+    return response.data;
+  } catch (error) {
+    console.error(`Error updating customer with ID ${id}:`, error);
+    throw error;
+  }
+};
+
+export const deleteCustomer = async (id: string) => {
+  try {
+    await api.delete(`/customers/${id}`);
+  } catch (error) {
+    console.error(`Error deleting customer with ID ${id}:`, error);
     throw error;
   }
 };

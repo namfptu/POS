@@ -26,7 +26,7 @@ export function DashboardHeader() {
           <option value="freshmart">Freshmart</option>
         </select>
 
-        <Button className="bg-orange-500 hover:bg-orange-600 text-white gap-2">
+        <Button className="bg-[#FE9F43] hover:bg-[#FF9025]/90">
           <span>+</span> Add New
         </Button>
 
