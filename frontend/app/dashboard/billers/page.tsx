@@ -7,48 +7,48 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationPrevious, PaginationNext } from "@/components/ui/pagination";
 import { PlusCircle, Search, Eye, Edit, Trash, FileDown, FileText } from "lucide-react";
-import { getCustomers, Customer, CustomerListResponse, createCustomer, updateCustomer, deleteCustomer, UpdateCustomerPayload } from "@/lib/api";
-import { CustomerForm } from "@/components/customer-form";
-import { CustomerDetailModal } from "@/components/customer-detail-modal";
+import { getBillers, Biller, BillerListResponse, createBiller, updateBiller, deleteBiller, UpdateBillerPayload } from "@/lib/api";
+import { BillerForm } from "@/components/biller-form";
+import { BillerDetailModal } from "@/components/biller-detail-modal";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
-export default function CustomersPage() {
+export default function BillersPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<"All" | "active" | "inactive">("All"); // Match backend status
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [pagination, setPagination] = useState<Omit<CustomerListResponse, 'customers'>>({
+  const [billers, setBillers] = useState<Biller[]>([]);
+  const [pagination, setPagination] = useState<Omit<BillerListResponse, 'billers'>>({
     pageNo: 0,
     pageSize: 10,
     totalElements: 0,
     totalPages: 0,
-    first: true, 
+    first: true, // Added first property to initial state
     last: true,
   });
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showAddForm, setShowAddForm] = useState(false); 
-  const [isSubmitting, setIsSubmitting] = useState(false); 
-  const [showDetailModal, setShowDetailModal] = useState(false); 
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null); 
-  const [showEditForm, setShowEditForm] = useState(false); 
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [customerToDeleteId, setCustomerToDeleteId] = useState<string | null>(null); 
+  const [showAddForm, setShowAddForm] = useState(false); // State to control add biller form visibility
+  const [isSubmitting, setIsSubmitting] = useState(false); // State for form submission loading
+  const [showDetailModal, setShowDetailModal] = useState(false); // State to control detail modal visibility
+  const [selectedBiller, setSelectedBiller] = useState<Biller | null>(null); // State for selected biller details
+  const [showEditForm, setShowEditForm] = useState(false); // State to control edit biller form visibility
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false); // State to control delete confirmation dialog
+  const [billerToDeleteId, setBillerToDeleteId] = useState<string | null>(null); // State for biller ID to delete
 
-  const fetchCustomers = useCallback(async () => {
+  const fetchBillers = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
       const fetchedStatus = filterStatus === "All" ? undefined : filterStatus.toUpperCase() as "ACTIVE" | "INACTIVE";
 
-      const data = await getCustomers({
-        page: currentPage - 1, 
+      const data = await getBillers({
+        page: currentPage - 1, // Adjust page to be 0-indexed for API
         size: pageSize,
         search: searchQuery || undefined,
         status: fetchedStatus,
       });
-      setCustomers(data.customers);
+      setBillers(data.billers);
       setPagination({
         pageNo: data.pageNo,
         pageSize: data.pageSize,
@@ -58,32 +58,31 @@ export default function CustomersPage() {
         last: data.last,
       });
     } catch (err) {
-      console.error("Failed to fetch customers:", err);
-      setError("Failed to load customers. Please try again later.");
+      console.error("Failed to fetch billers:", err);
+      setError("Failed to load billers. Please try again later.");
     } finally {
       setIsLoading(false);
     }
   }, [currentPage, pageSize, searchQuery, filterStatus]);
 
-  const handleCreateCustomer = useCallback(async (customerData: Omit<Customer, 'id' | 'createdAt' | 'code' | 'email' | 'companyName' | 'role'> & { email?: string; imageUrl?: string | null; }) => {
+  const handleCreateBiller = useCallback(async (billerData: Omit<Biller, 'id' | 'createdAt' | 'code'> & { email: string; companyName: string | null; imageUrl?: string | null; }) => {
     setIsSubmitting(true);
     try {
-      // Pass customerData directly to createCustomer after ensuring it has the required fields
-      await createCustomer(customerData as Omit<Customer, 'id' | 'createdAt'>); // Cast to expected type
-      alert("Customer added successfully!");
+      await createBiller(billerData);
+      alert("Biller added successfully!");
       setShowAddForm(false); // Close the form
-      fetchCustomers(); // Reload customer list
+      fetchBillers(); 
     } catch (error) {
-      console.error("Error creating customer:", error);
-      alert("Failed to add customer. Please try again.");
+      console.error("Error creating biller:", error);
+      alert("Failed to add biller. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
-  }, [fetchCustomers]); // Add fetchCustomers to dependencies
+  }, [fetchBillers]); // Add fetchBillers to dependencies
 
   useEffect(() => {
-    fetchCustomers();
-  }, [fetchCustomers]);
+    fetchBillers();
+  }, [fetchBillers]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -94,72 +93,73 @@ export default function CustomersPage() {
     setCurrentPage(1); // Reset to first page on size change
   };
 
-  const handleViewCustomer = useCallback((customer: Customer) => {
-    setSelectedCustomer(customer);
+  const handleViewBiller = useCallback((biller: Biller) => {
+    setSelectedBiller(biller);
     setShowDetailModal(true);
   }, []);
 
-  const handleEditCustomer = useCallback((customer: Customer) => {
-    setSelectedCustomer(customer);
+  const handleEditBiller = useCallback((biller: Biller) => {
+    setSelectedBiller(biller);
     setShowEditForm(true);
   }, []);
 
-  const handleUpdateCustomer = useCallback(async (customerData: Omit<Customer, 'id' | 'createdAt' | 'code' | 'email' | 'companyName' | 'role'> & { email?: string; imageUrl?: string | null; }, id?: string) => {
+  const handleUpdateBiller = useCallback(async (billerData: Omit<Biller, 'id' | 'createdAt' | 'code'> & { email?: string; companyName?: string | null; imageUrl?: string | null; }, id?: string) => {
     if (!id) {
-      alert("Customer ID is missing for update.");
+      alert("Biller ID is missing for update.");
       return;
     }
 
-    // Create a payload that matches UpdateCustomerPayload interface, excluding companyName and role
-    const payload: UpdateCustomerPayload = {
-      name: customerData.name,
-      phone: customerData.phone,
-      country: customerData.country,
-      status: customerData.status,
-      imageUrl: customerData.imageUrl
+    // Create a payload that matches UpdateBillerPayload interface, excluding email
+    const payload: UpdateBillerPayload = {
+      name: billerData.name,
+      phone: billerData.phone,
+      country: billerData.country,
+      companyName: billerData.companyName,
+      status: billerData.status,
+      imageUrl: billerData.imageUrl
     };
 
     setIsSubmitting(true);
     try {
-      await updateCustomer(id, payload);
-      alert("Customer updated successfully!");
+      await updateBiller(id, payload);
+      alert("Biller updated successfully!");
       setShowEditForm(false); // Close the form
-      fetchCustomers();
+      fetchBillers();
     } catch (error) {
-      console.error("Error updating customer:", error);
-      alert("Failed to update customer. Please try again.");
+      console.error("Error updating biller:", error);
+      alert("Failed to update biller. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
-  }, [fetchCustomers]);
+  }, [fetchBillers]);
 
   const handleDeleteConfirm = useCallback((id: string) => {
-    setCustomerToDeleteId(id);
+    setBillerToDeleteId(id);
     setShowDeleteConfirm(true);
   }, []);
 
-  const handleDeleteCustomer = useCallback(async () => {
-    if (!customerToDeleteId) return;
+  const handleDeleteBiller = useCallback(async () => {
+    if (!billerToDeleteId) return;
 
     setIsSubmitting(true);
     try {
-      const response = await deleteCustomer(customerToDeleteId);
-      alert(response.message || "Customer deleted successfully!");
-      fetchCustomers();
+      const response = await deleteBiller(billerToDeleteId);
+      alert(response.message || "Biller deleted successfully!");
+      fetchBillers();
     } catch (error) {
-      console.error("Error deleting customer:", error);
-      alert("Failed to delete customer. Please try again.");
+      console.error("Error deleting biller:", error);
+      alert("Failed to delete biller. Please try again.");
     } finally {
       setIsSubmitting(false);
-      setShowDeleteConfirm(false); // Close the dialog
-      setCustomerToDeleteId(null);
+      setShowDeleteConfirm(false);
+      setBillerToDeleteId(null);
     }
-  }, [customerToDeleteId, fetchCustomers]);
+  }, [billerToDeleteId, fetchBillers]);
 
   return (
     <div className="flex-1 space-y-4 p-4 md:p-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Customers</h2>
+        <h2 className="text-lg font-semibold">Billers</h2>
         <div className="flex items-center space-x-2">
           <Button variant="outline" size="sm" className="bg-[#EE2C2C]">
             <FileText className="mr-2 h-4 w-4" />
@@ -169,9 +169,9 @@ export default function CustomersPage() {
             <FileDown className="mr-2 h-4 w-4" />
             Excel
           </Button>
-          <Button size="sm" className="bg-[#FF9025] hover:bg-[#FF9025]/90" onClick={() => setShowAddForm(true)}> {/* Open add customer form */}
+          <Button size="sm" className="bg-[#FF9025] hover:bg-[#FF9025]/90" onClick={() => setShowAddForm(true)}> {/* Open add biller form */}
             <PlusCircle className="mr-2 h-4 w-4" />
-            Add Customer
+            Add Biller
           </Button>
         </div>
       </div>
@@ -180,7 +180,7 @@ export default function CustomersPage() {
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
           <Input
-            placeholder="Search"
+            placeholder="Search..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-9"
@@ -206,58 +206,56 @@ export default function CustomersPage() {
             <TableRow className="bg-[#F2F2F2]">
               <TableHead className="w-[50px]"><input type="checkbox" className="h-4 w-4" /></TableHead>
               <TableHead>Code ⇅</TableHead>
-              <TableHead>Customer</TableHead>
+              <TableHead>Biller</TableHead>
+              <TableHead>Company Name</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Phone</TableHead>
               <TableHead>Country</TableHead>
-              {/* <TableHead>Company Name</TableHead> */}
-              {/* <TableHead>Role</TableHead> */}
               <TableHead>Status</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead className="text-right"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-8">
-                  Loading customers...
+                <TableCell colSpan={9} className="text-center py-8">
+                  Loading billers...
                 </TableCell>
               </TableRow>
             ) : error ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-8 text-red-500">
+                <TableCell colSpan={9} className="text-center py-8 text-red-500">
                   {error}
                 </TableCell>
               </TableRow>
-            ) : customers && customers.length === 0 ? (
+            ) : billers && billers.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-8">
-                  No customers found.
+                <TableCell colSpan={9} className="text-center py-8">
+                  No billers found.
                 </TableCell>
               </TableRow>
             ) : (
-              (customers || []).map((customer) => (
-                <TableRow key={customer.id}>
+              (billers || []).map((biller) => (
+                <TableRow key={biller.id}>
                   <TableCell><input type="checkbox" className="h-4 w-4" /></TableCell>
-                  <TableCell className="font-medium">{customer.code}</TableCell>
+                  <TableCell className="font-medium">{biller.code}</TableCell>
                   <TableCell className="flex items-center gap-2">
-                    <img src={customer.imageUrl || "/placeholder-user.jpg"} alt={customer.name} className="h-8 w-8 rounded-full object-cover" />
-                    <span>{customer.name}</span>
+                    <img src={biller.imageUrl || "/placeholder-user.jpg"} alt={biller.name} className="h-8 w-8 rounded-full object-cover" />
+                    <span>{biller.name}</span>
                   </TableCell>
-                  <TableCell>{customer.email}</TableCell>
-                  <TableCell>{customer.phone}</TableCell>
-                  <TableCell>{customer.country}</TableCell>
-                  {/* <TableCell>{customer.companyName}</TableCell> */}
-                  {/* <TableCell className="capitalize">{customer.role}</TableCell> */}
+                  <TableCell>{biller.companyName}</TableCell>
+                  <TableCell>{biller.email}</TableCell>
+                  <TableCell>{biller.phone}</TableCell>
+                  <TableCell>{biller.country}</TableCell>
                   <TableCell>
-                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${customer.status === "active" ? "bg-[#3EB780] text-[#FFFFFF]" : "bg-[#EE0000] text-[#FFFFFF]"}`}>
-                      {customer.status === "active" ? "• Active" : "• Inactive"}
+                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${biller.status === "active" ? "bg-[#3EB780] text-[#FFFFFF]" : "bg-red-100 text-red-800"}`}>
+                      {biller.status === "active" ? "• Active" : "Inactive"}
                     </span>
                   </TableCell>
                   <TableCell className="flex justify-end gap-2">
-                    <Button variant="ghost" size="icon" onClick={() => handleViewCustomer(customer)}><Eye className="h-4 w-4" /></Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleEditCustomer(customer)}><Edit className="h-4 w-4" /></Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDeleteConfirm(customer.id)}><Trash className="h-4 w-4" /></Button>
+                    <Button variant="ghost" size="icon" onClick={() => handleViewBiller(biller)}><Eye className="h-4 w-4" /></Button>
+                    <Button variant="ghost" size="icon" onClick={() => handleEditBiller(biller)}><Edit className="h-4 w-4" /></Button>
+                    <Button variant="ghost" size="icon" onClick={() => handleDeleteConfirm(biller.id)}><Trash className="h-4 w-4" /></Button>
                   </TableCell>
                 </TableRow>
               ))
@@ -306,24 +304,24 @@ export default function CustomersPage() {
         </Pagination>
       </div>
 
-      <CustomerForm
+      <BillerForm
         isOpen={showAddForm}
         onClose={() => setShowAddForm(false)}
-        onSubmit={handleCreateCustomer}
+        onSubmit={handleCreateBiller}
         isLoading={isSubmitting}
       />
 
-      <CustomerDetailModal
+      <BillerDetailModal
         isOpen={showDetailModal}
         onClose={() => setShowDetailModal(false)}
-        customer={selectedCustomer}
+        biller={selectedBiller}
       />
 
-      <CustomerForm
+      <BillerForm
         isOpen={showEditForm}
         onClose={() => setShowEditForm(false)}
-        customer={selectedCustomer || undefined} // Pass selected customer for editing
-        onSubmit={handleUpdateCustomer}
+        biller={selectedBiller || undefined} // Pass selected biller for editing
+        onSubmit={handleUpdateBiller}
         isLoading={isSubmitting}
       />
 
@@ -332,13 +330,13 @@ export default function CustomersPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the customer
+              This action cannot be undone. This will permanently delete the biller
               and remove their data from our servers.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isSubmitting}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteCustomer} disabled={isSubmitting} className="bg-red-500 hover:bg-red-600 text-white">
+            <AlertDialogAction onClick={handleDeleteBiller} disabled={isSubmitting} className="bg-red-500 hover:bg-red-600 text-white">
               {isSubmitting ? "Deleting..." : "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>

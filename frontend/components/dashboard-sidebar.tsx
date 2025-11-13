@@ -52,6 +52,9 @@ export function DashboardSidebar({ open, onToggle }: DashboardSidebarProps) {
         <div className="space-y-1">
           <NavItem icon={<DashboardIcon className="w-5 h-5" />} label="Dashboard" active={pathname === "/dashboard"} open={open} href="/dashboard" />
           <NavItem icon={<Users className="w-5 h-5" />} label="Customers" active={pathname === "/dashboard/customers"} open={open} href="/dashboard/customers" />
+          <NavItem icon={<Users className="w-5 h-5" />} label="Billers" active={pathname === "/dashboard/billers"} open={open} href="/dashboard/billers" />
+          <NavItem icon={<Truck className="w-5 h-5" />} label="Suppliers" active={pathname === "/dashboard/suppliers"} open={open} href="/dashboard/suppliers" />
+          <NavItem icon={<Package className="w-5 h-5" />} label="Stores" active={pathname === "/dashboard/stores"} open={open} href="/dashboard/stores" />
           <NavItem icon={<Users className="w-5 h-5" />} label="Super Admin" open={open} />
         </div>
 
@@ -62,10 +65,17 @@ export function DashboardSidebar({ open, onToggle }: DashboardSidebarProps) {
 
         <div className="space-y-1">
           <NavItem icon={<Package className="w-5 h-5" />} label="Products" open={open} />
+          <NavItem icon={<Box className="w-5 h-5" />} label="Warehouses" active={pathname === "/dashboard/warehouses"} open={open} href="/dashboard/warehouses" />
           <NavItem icon={<Plus className="w-5 h-5" />} label="Create Product" open={open} />
           <NavItem icon={<Clock className="w-5 h-5" />} label="Expired Products" open={open} />
           <NavItem icon={<Zap className="w-5 h-5" />} label="Low Stocks" open={open} />
-          <NavItem icon={<Layers className="w-5 h-5" />} label="Category" open={open} />
+          <NavItem
+            icon={<Layers className="w-5 h-5" />}
+            label="Category"
+            href="/category"
+            active={pathname === "/category"}
+            open={open}
+          />
           <NavItem icon={<Tag className="w-5 h-5" />} label="Sub Category" open={open} />
           <NavItem icon={<Package className="w-5 h-5" />} label="Brands" open={open} />
           <NavItem icon={<Zap className="w-5 h-5" />} label="Units" open={open} />

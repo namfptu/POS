@@ -6,53 +6,53 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Customer } from "@/lib/api";
+import { Supplier } from "@/lib/api"; // Changed from Customer to Supplier
 
-interface CustomerFormProps {
+interface SupplierFormProps {
   isOpen: boolean;
   onClose: () => void;
-  customer?: Customer; // Optional customer object for editing
-  onSubmit: (customer: Omit<Customer, 'id' | 'createdAt' | 'code' | 'email' | 'companyName' | 'role'> & { email?: string; imageUrl?: string | null; }, id?: string) => Promise<void>;
+  supplier?: Supplier; // Optional supplier object for editing
+  onSubmit: (supplier: Omit<Supplier, 'id' | 'createdAt' | 'code' | 'email' | 'companyName' | 'role'> & { email?: string; imageUrl?: string | null; }, id?: string) => Promise<void>; // Updated for Supplier
   isLoading: boolean;
 }
 
-export function CustomerForm({ isOpen, onClose, customer, onSubmit, isLoading }: CustomerFormProps) {
-  const [name, setName] = useState(customer?.name || "");
-  const [email, setEmail] = useState(customer?.email || ""); // Re-add email state
-  const [phone, setPhone] = useState(customer?.phone || "");
-  const [country, setCountry] = useState(customer?.country || "");
+export function SupplierForm({ isOpen, onClose, supplier, onSubmit, isLoading }: SupplierFormProps) {
+  const [name, setName] = useState(supplier?.name || "");
+  const [email, setEmail] = useState(supplier?.email || ""); // Re-add email state
+  const [phone, setPhone] = useState(supplier?.phone || "");
+  const [country, setCountry] = useState(supplier?.country || "");
   // Remove companyName and role state
-  const [status, setStatus] = useState<"active" | "inactive">(customer?.status || "active");
-  const [imageUrl, setImageUrl] = useState(customer?.imageUrl || "");
+  const [status, setStatus] = useState<"active" | "inactive">(supplier?.status || "active");
+  const [imageUrl, setImageUrl] = useState(supplier?.imageUrl || "");
 
   useEffect(() => {
-    if (customer) {
-      setName(customer.name);
-      setEmail(customer.email); // Set email from customer data
-      setPhone(customer.phone || "");
-      setCountry(customer.country || "");
-      // Remove companyName and role from customer data
-      setStatus(customer.status);
-      setImageUrl(customer.imageUrl || "");
+    if (supplier) {
+      setName(supplier.name);
+      setEmail(supplier.email); // Set email from supplier data
+      setPhone(supplier.phone || "");
+      setCountry(supplier.country || "");
+      // Remove companyName and role from supplier data
+      setStatus(supplier.status);
+      setImageUrl(supplier.imageUrl || "");
     } else {
-      // Reset form for new customer
+      // Reset form for new supplier
       setName("");
-      setEmail(""); // Reset email for new customer
+      setEmail(""); // Reset email for new supplier
       setPhone("");
       setCountry("");
       // Remove companyName and role from reset
       setStatus("active");
       setImageUrl("");
     }
-  }, [customer]);
+  }, [supplier]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Only include email if adding a new customer
-    const customerData = !customer
+    // Only include email if adding a new supplier
+    const supplierData = !supplier
       ? { name, email, phone, country, status, imageUrl }
       : { name, phone, country, status, imageUrl };
-    await onSubmit(customerData, customer?.id);
+    await onSubmit(supplierData, supplier?.id);
     onClose();
   };
 
@@ -60,7 +60,7 @@ export function CustomerForm({ isOpen, onClose, customer, onSubmit, isLoading }:
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>{customer ? "Edit Customer" : "Add New Customer"}</DialogTitle>
+          <DialogTitle>{supplier ? "Edit Supplier" : "Add New Supplier"}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
@@ -75,7 +75,7 @@ export function CustomerForm({ isOpen, onClose, customer, onSubmit, isLoading }:
               required
             />
           </div>
-          {!customer && ( // Conditionally render email field only for new customers
+          {!supplier && ( // Conditionally render email field only for new suppliers
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="email" className="text-right">
                 Email
@@ -143,7 +143,7 @@ export function CustomerForm({ isOpen, onClose, customer, onSubmit, isLoading }:
               Cancel
             </Button>
             <Button type="submit" className="bg-orange-500 hover:bg-orange-600 text-white" disabled={isLoading}>
-              {isLoading ? (customer ? "Saving..." : "Adding...") : (customer ? "Save Changes" : "Add Customer")}
+              {isLoading ? (supplier ? "Saving..." : "Adding...") : (supplier ? "Save Changes" : "Add Supplier")}
             </Button>
           </DialogFooter>
         </form>
@@ -151,3 +151,4 @@ export function CustomerForm({ isOpen, onClose, customer, onSubmit, isLoading }:
     </Dialog>
   );
 }
+

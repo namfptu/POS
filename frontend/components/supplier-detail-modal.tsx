@@ -1,61 +1,60 @@
 "use client";
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Customer } from "@/lib/api";
+import { Supplier } from "@/lib/api"; // Changed from Customer to Supplier
 
-interface CustomerDetailModalProps {
+interface SupplierDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
-  customer: Customer | null;
+  supplier: Supplier | null;
 }
 
-export function CustomerDetailModal({ isOpen, onClose, customer }: CustomerDetailModalProps) {
-  if (!customer) return null;
+export function SupplierDetailModal({ isOpen, onClose, supplier }: SupplierDetailModalProps) {
+  if (!supplier) return null;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Customer Details</DialogTitle>
+          <DialogTitle>Supplier Details</DialogTitle>
           <DialogDescription>
-            View the detailed information of the customer.
+            View the detailed information of the supplier.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
             <span className="text-sm font-medium text-gray-500">Code:</span>
-            <span className="col-span-3 text-sm text-gray-900">{customer.code}</span>
+            <span className="col-span-3 text-sm text-gray-900">{supplier.id}</span> {/* Changed to supplier.id */}
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <span className="text-sm font-medium text-gray-500">Name:</span>
-            <span className="col-span-3 text-sm text-gray-900">{customer.name}</span>
+            <span className="col-span-3 text-sm text-gray-900">{supplier.name}</span>
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <span className="text-sm font-medium text-gray-500">Email:</span>
-            <span className="col-span-3 text-sm text-gray-900">{customer.email}</span>
+            <span className="col-span-3 text-sm text-gray-900">{supplier.email}</span>
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <span className="text-sm font-medium text-gray-500">Phone:</span>
-            <span className="col-span-3 text-sm text-gray-900">{customer.phone || "N/A"}</span>
+            <span className="col-span-3 text-sm text-gray-900">{supplier.phone || "N/A"}</span>
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <span className="text-sm font-medium text-gray-500">Country:</span>
-            <span className="col-span-3 text-sm text-gray-900">{customer.country || "N/A"}</span>
+            <span className="col-span-3 text-sm text-gray-900">{supplier.country || "N/A"}</span>
           </div>
-          {/* Remove Company Name and Role fields */}
           <div className="grid grid-cols-4 items-center gap-4">
             <span className="text-sm font-medium text-gray-500">Status:</span>
-            <span className="col-span-3 text-sm text-gray-900 capitalize">{customer.status}</span>
+            <span className="col-span-3 text-sm text-gray-900 capitalize">{supplier.status}</span>
           </div>
-          {customer.imageUrl && (
+          {supplier.imageUrl && (
             <div className="grid grid-cols-4 items-center gap-4">
               <span className="text-sm font-medium text-gray-500">Image URL:</span>
-              <img src={customer.imageUrl} alt="Customer Image" className="col-span-3 h-16 w-16 object-cover rounded-full" />
+              <img src={supplier.imageUrl} alt="Supplier Image" className="col-span-3 h-16 w-16 object-cover rounded-full" />
             </div>
           )}
           <div className="grid grid-cols-4 items-center gap-4">
             <span className="text-sm font-medium text-gray-500">Created At:</span>
-            <span className="col-span-3 text-sm text-gray-900">{new Date(customer.createdAt).toLocaleString()}</span>
+            <span className="col-span-3 text-sm text-gray-900">{new Date(supplier.createdAt).toLocaleString()}</span>
           </div>
         </div>
       </DialogContent>
