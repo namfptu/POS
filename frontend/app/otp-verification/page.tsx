@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { TimerIcon } from "lucide-react";
 import { useSearchParams, useRouter } from "next/navigation"; // Import useRouter
-import { verifyOtp, forgotPassword } from "@/lib/api"; // Import the API functions
+import { verifyOtp, forgotPassword } from "@/lib/api/auth"; // Import the API functions
 
 const maskEmail = (email: string) => {
   const [name, domain] = email.split('@');

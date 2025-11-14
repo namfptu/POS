@@ -7,7 +7,7 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationPrevious, PaginationNext } from "@/components/ui/pagination";
 import { PlusCircle, Search, Eye, Edit, Trash, FileDown, FileText } from "lucide-react";
-import { getCustomers, Customer, CustomerListResponse, createCustomer, updateCustomer, deleteCustomer, UpdateCustomerPayload } from "@/lib/api";
+import { getCustomers, Customer, CustomerListResponse, createCustomer, updateCustomer, deleteCustomer, UpdateCustomerPayload } from "@/lib/api/customers";
 import { CustomerForm } from "@/components/customer-form";
 import { CustomerDetailModal } from "@/components/customer-detail-modal";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
@@ -40,7 +40,7 @@ export default function CustomersPage() {
     setIsLoading(true);
     setError(null);
     try {
-      const fetchedStatus = filterStatus === "All" ? undefined : filterStatus.toUpperCase() as "ACTIVE" | "INACTIVE";
+      const fetchedStatus = filterStatus === "All" ? undefined : filterStatus; // Removed .toUpperCase()
 
       const data = await getCustomers({
         page: currentPage - 1, 

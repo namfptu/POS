@@ -7,7 +7,7 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationPrevious, PaginationNext } from "@/components/ui/pagination";
 import { PlusCircle, Search, Eye, Edit, Trash, FileDown, FileText } from "lucide-react";
-import { getBillers, Biller, BillerListResponse, createBiller, updateBiller, deleteBiller, UpdateBillerPayload } from "@/lib/api";
+import { getBillers, Biller, BillerListResponse, createBiller, updateBiller, deleteBiller, UpdateBillerPayload } from "@/lib/api/billers";
 import { BillerForm } from "@/components/biller-form";
 import { BillerDetailModal } from "@/components/biller-detail-modal";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
@@ -40,7 +40,7 @@ export default function BillersPage() {
     setIsLoading(true);
     setError(null);
     try {
-      const fetchedStatus = filterStatus === "All" ? undefined : filterStatus.toUpperCase() as "ACTIVE" | "INACTIVE";
+      const fetchedStatus = filterStatus === "All" ? undefined : filterStatus; // Removed .toUpperCase()
 
       const data = await getBillers({
         page: currentPage - 1, // Adjust page to be 0-indexed for API

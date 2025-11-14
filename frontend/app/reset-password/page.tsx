@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { resetPassword } from "@/lib/api";
+import { resetPassword } from "@/lib/api/auth";
 
 export default function ResetPasswordPage() {
   const [newPassword, setNewPassword] = useState("");

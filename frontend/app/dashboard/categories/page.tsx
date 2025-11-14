@@ -7,17 +7,16 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationPrevious, PaginationNext } from "@/components/ui/pagination";
 import { PlusCircle, Search, Eye, Edit, Trash, FileDown, FileText, ArrowUp, ArrowDown } from "lucide-react";
-import { getStores, Store, StoreListResponse, createStore, updateStore, deleteStore, CreateStorePayload, UpdateStorePayload } from "@/lib/api/stores";
-import { StoreForm } from "@/components/store-form";
-import { StoreDetailModal } from "@/components/store-detail-modal";
+import { getCategories, Category, CategoryListResponse, createCategory, updateCategory, deleteCategory, CreateCategoryPayload, UpdateCategoryPayload } from "@/lib/api/categories";
+import { CategoryForm } from "@/components/category-form";
+import { CategoryDetailModal } from "@/components/category-detail-modal";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
-export default function StoresPage() {
-  // const { user } = useAuth(); // Removed: No longer need user context for Stores page
+export default function CategoriesPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<"All" | "active" | "inactive">("All");
-  const [stores, setStores] = useState<Store[]>([]);
-  const [pagination, setPagination] = useState<Omit<StoreListResponse, 'stores'>>({
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [pagination, setPagination] = useState<Omit<CategoryListResponse, 'categories'>>({
     pageNo: 0,
     pageSize: 10,
     totalElements: 0,
@@ -33,11 +32,11 @@ export default function StoresPage() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
-  const [selectedStore, setSelectedStore] = useState<Store | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [sortBy, setSortBy] = useState<string | undefined>(undefined); // Added sortBy state
   const [sortDir, setSortDir] = useState<"asc" | "desc" | undefined>(undefined); // Added sortDir state
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [storeToDeleteId, setStoreToDeleteId] = useState<number | null>(null);
+  const [categoryToDeleteId, setCategoryToDeleteId] = useState<number | null>(null);
 
   const handlePageSizeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setPageSize(Number(e.target.value));
@@ -58,21 +57,21 @@ export default function StoresPage() {
     setCurrentPage(1);
   };
 
-  const fetchStores = useCallback(async () => {
+  const fetchCategories = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
       const fetchedStatus = filterStatus === "All" ? undefined : filterStatus; // Removed .toUpperCase()
 
-      const data = await getStores({
+      const data = await getCategories({
         page: currentPage - 1,
         size: pageSize,
         search: searchQuery || undefined,
         status: fetchedStatus,
-        sortBy: sortBy, // Pass sortBy
-        sortDir: sortDir, // Pass sortDir
+        sortBy: sortBy,
+        sortDir: sortDir,
       });
-      setStores(data.stores);
+      setCategories(data.categories);
       setPagination({
         pageNo: data.pageNo,
         pageSize: data.pageSize,
@@ -82,96 +81,90 @@ export default function StoresPage() {
         last: data.last,
       });
     } catch (err) {
-      console.error("Failed to fetch stores:", err);
-      setError("Failed to load stores. Please try again later.");
+      console.error("Failed to fetch categories:", err);
+      setError("Failed to load categories. Please try again later.");
     } finally {
       setIsLoading(false);
     }
-  }, [currentPage, pageSize, searchQuery, filterStatus, sortBy, sortDir]); // Added sortBy and sortDir to dependencies
+  }, [currentPage, pageSize, searchQuery, filterStatus, sortBy, sortDir]);
 
-  const handleCreateStore = useCallback(async (storeData: CreateStorePayload) => {
+  const handleCreateCategory = useCallback(async (categoryData: CreateCategoryPayload) => {
     setIsSubmitting(true);
     try {
-      const response = await createStore(storeData);
-      alert("Store added successfully!");
+      const response = await createCategory(categoryData);
+      alert("Category added successfully!");
       setShowAddForm(false);
-      fetchStores();
+      fetchCategories();
     } catch (error: any) {
-      console.error("Error creating store:", error);
-      alert(`Failed to add store: ${error.response?.data?.message || error.message}. Please try again.`);
+      console.error("Error creating category:", error);
+      alert(`Failed to add category: ${error.response?.data?.message || error.message}. Please try again.`);
     } finally {
       setIsSubmitting(false);
     }
-  }, [fetchStores]);
+  }, [fetchCategories]);
 
   useEffect(() => {
-    fetchStores();
-  }, [fetchStores]);
+    fetchCategories();
+  }, [fetchCategories]);
 
-  const handleViewStore = useCallback((store: Store) => {
-    setSelectedStore(store);
+  const handleViewCategory = useCallback((category: Category) => {
+    setSelectedCategory(category);
     setShowDetailModal(true);
   }, []);
 
-  const handleEditStore = useCallback((store: Store) => {
-    setSelectedStore(store);
+  const handleEditCategory = useCallback((category: Category) => {
+    setSelectedCategory(category);
     setShowEditForm(true);
   }, []);
 
-  const handleUpdateStore = useCallback(async (storeData: UpdateStorePayload, id?: number) => {
+  const handleUpdateCategory = useCallback(async (categoryData: UpdateCategoryPayload, id?: number) => {
     if (!id) {
-      alert("Store ID is missing for update.");
+      alert("Category ID is missing for update.");
       return;
     }
 
-    const payload: UpdateStorePayload = {
-      name: storeData.name,
-      email: storeData.email,
-      phone: storeData.phone,
-      address: storeData.address,
-      city: storeData.city,
-      country: storeData.country,
-      warehouseId: storeData.warehouseId,
-      userId: storeData.userId,
-      status: storeData.status,
+    const payload: UpdateCategoryPayload = {
+      name: categoryData.name,
+      slug: categoryData.slug,
+      status: categoryData.status,
     };
 
     setIsSubmitting(true);
     try {
-      const response = await updateStore(id, payload);
-      alert("Store updated successfully!");
+      const response = await updateCategory(id, payload);
+      alert("Category updated successfully!");
       setShowEditForm(false);
-      fetchStores();
+      fetchCategories();
     } catch (error: any) {
-      console.error("Error updating store:", error);
-      alert(`Failed to update store: ${error.response?.data?.message || error.message}. Please try again.`);
+      console.error("Error updating category:", error);
+      alert(`Failed to update category: ${error.response?.data?.message || error.message}. Please try again.`);
     } finally {
       setIsSubmitting(false);
     }
-  }, [fetchStores]);
+  }, [fetchCategories]);
 
   const handleDeleteConfirm = useCallback((id: number) => {
-    setStoreToDeleteId(id);
+    setCategoryToDeleteId(id);
     setShowDeleteConfirm(true);
   }, []);
 
-  const handleDeleteStore = useCallback(async () => {
-    if (storeToDeleteId === null) return;
+  const handleDeleteCategory = useCallback(async () => {
+    if (categoryToDeleteId === null) return;
 
     setIsSubmitting(true);
     try {
-      const response = await deleteStore(storeToDeleteId);
-      alert(response.message || "Store deleted successfully!");
-      fetchStores();
+      const response = await deleteCategory(categoryToDeleteId);
+      alert(response.message || "Category deleted successfully!");
+      fetchCategories();
     } catch (error: any) {
-      console.error("Error deleting store:", error);
-      alert(`Failed to delete store: ${error.response?.data?.message || error.message}. Please try again.`);
+      console.error("Error deleting category:", error);
+      alert(`Failed to delete category: ${error.response?.data?.message || error.message}. Please try again.`);
     } finally {
       setIsSubmitting(false);
       setShowDeleteConfirm(false);
-      setStoreToDeleteId(null);
+      setCategoryToDeleteId(null);
     }
-  }, [storeToDeleteId, fetchStores]);
+  }, [categoryToDeleteId, fetchCategories]);
 
   const handleSort = (column: string) => {
     if (sortBy === column) {
@@ -185,7 +178,7 @@ export default function StoresPage() {
   return (
     <div className="flex-1 space-y-4 p-4 md:p-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Stores</h2>
+        <h2 className="text-lg font-semibold">Categories</h2>
         <div className="flex items-center space-x-2">
           <Button variant="outline" size="sm" className="bg-[#EE2C2C]">
             <FileText className="mr-2 h-4 w-4" />
@@ -197,7 +190,7 @@ export default function StoresPage() {
           </Button>
           <Button size="sm" className="bg-[#FF9025] hover:bg-[#FF9025]/90" onClick={() => setShowAddForm(true)}>
             <PlusCircle className="mr-2 h-4 w-4" />
-            Add Store
+            Add Category
           </Button>
         </div>
       </div>
@@ -206,7 +199,7 @@ export default function StoresPage() {
         <div className="flex-1 max-w-md mr-4">
           <Input
             type="text"
-            placeholder="Search stores..."
+            placeholder="Search categories..."
             value={searchQuery}
             onChange={handleSearch}
             className="w-full"
@@ -231,10 +224,9 @@ export default function StoresPage() {
           <TableHeader>
             <TableRow className="bg-[#F2F2F2]">
               <TableHead className="w-[50px]"><input type="checkbox" className="h-4 w-4" /></TableHead>
-              <TableHead onClick={() => handleSort("name")}>Store {sortBy === "name" && (sortDir === "asc" ? <ArrowUp className="inline h-4 w-4" /> : <ArrowDown className="inline h-4 w-4" />)}</TableHead>
-              <TableHead onClick={() => handleSort("userName")}>User Name {sortBy === "userName" && (sortDir === "asc" ? <ArrowUp className="inline h-4 w-4" /> : <ArrowDown className="inline h-4 w-4" />)}</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Phone</TableHead>
+              <TableHead onClick={() => handleSort("name")}>Category {sortBy === "name" && (sortDir === "asc" ? <ArrowUp className="inline h-4 w-4" /> : <ArrowDown className="inline h-4 w-4" />)}</TableHead>
+              <TableHead>Category Slug</TableHead>
+              <TableHead onClick={() => handleSort("createdOn")}>Created On {sortBy === "createdOn" && (sortDir === "asc" ? <ArrowUp className="inline h-4 w-4" /> : <ArrowDown className="inline h-4 w-4" />)}</TableHead>
               <TableHead onClick={() => handleSort("status")}>Status {sortBy === "status" && (sortDir === "asc" ? <ArrowUp className="inline h-4 w-4" /> : <ArrowDown className="inline h-4 w-4" />)}</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
@@ -242,39 +234,38 @@ export default function StoresPage() {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8">
-                  Loading stores...
+                <TableCell colSpan={6} className="text-center py-8">
+                  Loading categories...
                 </TableCell>
               </TableRow>
             ) : error ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8 text-red-500">
+                <TableCell colSpan={6} className="text-center py-8 text-red-500">
                   {error}
                 </TableCell>
               </TableRow>
-            ) : stores && stores.length === 0 ? (
+            ) : categories && categories.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8">
-                  No stores found.
+                <TableCell colSpan={6} className="text-center py-8">
+                  No categories found.
                 </TableCell>
               </TableRow>
             ) : (
-              (stores || []).map((store) => (
-                <TableRow key={store.id}>
+              (categories || []).map((category) => (
+                <TableRow key={category.id}>
                   <TableCell><input type="checkbox" className="h-4 w-4" /></TableCell>
-                  <TableCell className="font-medium">{store.name}</TableCell>
-                  <TableCell>{store.userName}</TableCell>
-                  <TableCell>{store.email}</TableCell>
-                  <TableCell>{store.phone}</TableCell>
+                  <TableCell className="font-medium">{category.name}</TableCell>
+                  <TableCell>{category.slug}</TableCell>
+                  <TableCell>{new Date(category.createdAt).toLocaleString()}</TableCell>
                   <TableCell>
-                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${store.status === "active" ? "bg-[#3EB780] text-[#FFFFFF]" : "bg-[#EE0000] text-[#FFFFFF]"}`}>
-                      {store.status === "active" ? "• Active" : "• Inactive"}
+                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${category.status === "active" ? "bg-[#3EB780] text-[#FFFFFF]" : "bg-[#EE0000] text-[#FFFFFF]"}`}>
+                      {category.status === "active" ? "• Active" : "• Inactive"}
                     </span>
                   </TableCell>
                   <TableCell className="flex justify-end gap-2">
-                    <Button variant="ghost" size="icon" onClick={() => handleViewStore(store)}><Eye className="h-4 w-4" /></Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleEditStore(store)} disabled={store.status === "inactive"}><Edit className="h-4 w-4" /></Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDeleteConfirm(store.id)} disabled={store.status === "inactive"}><Trash className="h-4 w-4" /></Button>
+                    <Button variant="ghost" size="icon" onClick={() => handleViewCategory(category)}><Eye className="h-4 w-4" /></Button>
+                    <Button variant="ghost" size="icon" onClick={() => handleEditCategory(category)}><Edit className="h-4 w-4" /></Button>
+                    <Button variant="ghost" size="icon" onClick={() => handleDeleteConfirm(category.id)}><Trash className="h-4 w-4" /></Button>
                   </TableCell>
                 </TableRow>
               ))
@@ -323,24 +314,24 @@ export default function StoresPage() {
         </Pagination>
       </div>
 
-      <StoreForm
+      <CategoryForm
         isOpen={showAddForm}
         onClose={() => setShowAddForm(false)}
-        onSubmit={handleCreateStore}
+        onSubmit={handleCreateCategory}
         isLoading={isSubmitting}
       />
 
-      <StoreDetailModal
+      <CategoryDetailModal
         isOpen={showDetailModal}
         onClose={() => setShowDetailModal(false)}
-        store={selectedStore}
+        category={selectedCategory}
       />
 
-      <StoreForm
+      <CategoryForm
         isOpen={showEditForm}
         onClose={() => setShowEditForm(false)}
-        store={selectedStore || undefined}
-        onSubmit={handleUpdateStore}
+        category={selectedCategory || undefined}
+        onSubmit={handleUpdateCategory}
         isLoading={isSubmitting}
       />
 
@@ -349,13 +340,13 @@ export default function StoresPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the store
+              This action cannot be undone. This will permanently delete the category
               and remove its data from our servers.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isSubmitting}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteStore} disabled={isSubmitting} className="bg-red-500 hover:bg-red-600 text-white">
+            <AlertDialogAction onClick={handleDeleteCategory} disabled={isSubmitting} className="bg-red-500 hover:bg-red-600 text-white">
               {isSubmitting ? "Deleting..." : "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>

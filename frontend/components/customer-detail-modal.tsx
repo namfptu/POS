@@ -1,7 +1,7 @@
 "use client";
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Customer } from "@/lib/api";
+import { Customer } from "@/lib/api/customers";
 
 interface CustomerDetailModalProps {
   isOpen: boolean;

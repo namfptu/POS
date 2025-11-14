@@ -1,7 +1,7 @@
 "use client";
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Biller } from "@/lib/api"; // Changed from Customer to Biller
+import { Biller } from "@/lib/api/billers"; // Changed from Customer to Biller
 
 interface BillerDetailModalProps {
   isOpen: boolean;

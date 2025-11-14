@@ -1,7 +1,7 @@
 "use client";
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Supplier } from "@/lib/api"; // Changed from Customer to Supplier
+import { Supplier } from "@/lib/api/suppliers"; // Changed from Customer to Supplier
 
 interface SupplierDetailModalProps {
   isOpen: boolean;

@@ -7,17 +7,15 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationPrevious, PaginationNext } from "@/components/ui/pagination";
 import { PlusCircle, Search, Eye, Edit, Trash, FileDown, FileText, ArrowUp, ArrowDown } from "lucide-react";
-import { getStores, Store, StoreListResponse, createStore, updateStore, deleteStore, CreateStorePayload, UpdateStorePayload } from "@/lib/api/stores";
-import { StoreForm } from "@/components/store-form";
-import { StoreDetailModal } from "@/components/store-detail-modal";
+import { getBrands, Brand, BrandListResponse, createBrand, updateBrand, deleteBrand, CreateBrandPayload, UpdateBrandPayload } from "@/lib/api/brands";
+import { BrandForm } from "@/components/brand-form";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
-export default function StoresPage() {
-  // const { user } = useAuth(); // Removed: No longer need user context for Stores page
+export default function BrandsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<"All" | "active" | "inactive">("All");
-  const [stores, setStores] = useState<Store[]>([]);
-  const [pagination, setPagination] = useState<Omit<StoreListResponse, 'stores'>>({
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [pagination, setPagination] = useState<Omit<BrandListResponse, 'brands'>>({
     pageNo: 0,
     pageSize: 10,
     totalElements: 0,
@@ -31,13 +29,12 @@ export default function StoresPage() {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [showDetailModal, setShowDetailModal] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
-  const [selectedStore, setSelectedStore] = useState<Store | null>(null);
-  const [sortBy, setSortBy] = useState<string | undefined>(undefined); // Added sortBy state
-  const [sortDir, setSortDir] = useState<"asc" | "desc" | undefined>(undefined); // Added sortDir state
+  const [selectedBrand, setSelectedBrand] = useState<Brand | null>(null);
+  const [sortBy, setSortBy] = useState<string | undefined>(undefined); 
+  const [sortDir, setSortDir] = useState<"asc" | "desc" | undefined>(undefined); 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [storeToDeleteId, setStoreToDeleteId] = useState<number | null>(null);
+  const [brandToDeleteId, setBrandToDeleteId] = useState<number | null>(null);
 
   const handlePageSizeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setPageSize(Number(e.target.value));
@@ -58,21 +55,21 @@ export default function StoresPage() {
     setCurrentPage(1);
   };
 
-  const fetchStores = useCallback(async () => {
+  const fetchBrands = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const fetchedStatus = filterStatus === "All" ? undefined : filterStatus; // Removed .toUpperCase()
+      const fetchedStatus = filterStatus === "All" ? undefined : filterStatus;
 
-      const data = await getStores({
+      const data = await getBrands({
         page: currentPage - 1,
         size: pageSize,
         search: searchQuery || undefined,
         status: fetchedStatus,
-        sortBy: sortBy, // Pass sortBy
-        sortDir: sortDir, // Pass sortDir
+        sortBy: sortBy,
+        sortDir: sortDir,
       });
-      setStores(data.stores);
+      setBrands(data.brands);
       setPagination({
         pageNo: data.pageNo,
         pageSize: data.pageSize,
@@ -82,96 +79,85 @@ export default function StoresPage() {
         last: data.last,
       });
     } catch (err) {
-      console.error("Failed to fetch stores:", err);
-      setError("Failed to load stores. Please try again later.");
+      console.error("Failed to fetch brands:", err);
+      setError("Failed to load brands. Please try again later.");
     } finally {
       setIsLoading(false);
     }
-  }, [currentPage, pageSize, searchQuery, filterStatus, sortBy, sortDir]); // Added sortBy and sortDir to dependencies
+  }, [currentPage, pageSize, searchQuery, filterStatus, sortBy, sortDir]);
 
-  const handleCreateStore = useCallback(async (storeData: CreateStorePayload) => {
+  const handleCreateBrand = useCallback(async (brandData: CreateBrandPayload) => {
     setIsSubmitting(true);
     try {
-      const response = await createStore(storeData);
-      alert("Store added successfully!");
+      const response = await createBrand(brandData);
+      alert("Brand added successfully!");
       setShowAddForm(false);
-      fetchStores();
+      fetchBrands();
     } catch (error: any) {
-      console.error("Error creating store:", error);
-      alert(`Failed to add store: ${error.response?.data?.message || error.message}. Please try again.`);
+      console.error("Error creating brand:", error);
+      alert(`Failed to add brand: ${error.response?.data?.message || error.message}. Please try again.`);
     } finally {
       setIsSubmitting(false);
     }
-  }, [fetchStores]);
+  }, [fetchBrands]);
 
   useEffect(() => {
-    fetchStores();
-  }, [fetchStores]);
+    fetchBrands();
+  }, [fetchBrands]);
 
-  const handleViewStore = useCallback((store: Store) => {
-    setSelectedStore(store);
-    setShowDetailModal(true);
-  }, []);
-
-  const handleEditStore = useCallback((store: Store) => {
-    setSelectedStore(store);
+  const handleEditBrand = useCallback((brand: Brand) => {
+    setSelectedBrand(brand);
     setShowEditForm(true);
   }, []);
 
-  const handleUpdateStore = useCallback(async (storeData: UpdateStorePayload, id?: number) => {
+  const handleUpdateBrand = useCallback(async (brandData: UpdateBrandPayload, id?: number) => {
     if (!id) {
-      alert("Store ID is missing for update.");
+      alert("Brand ID is missing for update.");
       return;
     }
 
-    const payload: UpdateStorePayload = {
-      name: storeData.name,
-      email: storeData.email,
-      phone: storeData.phone,
-      address: storeData.address,
-      city: storeData.city,
-      country: storeData.country,
-      warehouseId: storeData.warehouseId,
-      userId: storeData.userId,
-      status: storeData.status,
+    const payload: UpdateBrandPayload = {
+      name: brandData.name,
+      imageUrl: brandData.imageUrl,
+      status: brandData.status,
     };
 
     setIsSubmitting(true);
     try {
-      const response = await updateStore(id, payload);
-      alert("Store updated successfully!");
+      const response = await updateBrand(id, payload);
+      alert("Brand updated successfully!");
       setShowEditForm(false);
-      fetchStores();
+      fetchBrands();
     } catch (error: any) {
-      console.error("Error updating store:", error);
-      alert(`Failed to update store: ${error.response?.data?.message || error.message}. Please try again.`);
+      console.error("Error updating brand:", error);
+      alert(`Failed to update brand: ${error.response?.data?.message || error.message}. Please try again.`);
     } finally {
       setIsSubmitting(false);
     }
-  }, [fetchStores]);
+  }, [fetchBrands]);
 
   const handleDeleteConfirm = useCallback((id: number) => {
-    setStoreToDeleteId(id);
+    setBrandToDeleteId(id);
     setShowDeleteConfirm(true);
   }, []);
 
-  const handleDeleteStore = useCallback(async () => {
-    if (storeToDeleteId === null) return;
+  const handleDeleteBrand = useCallback(async () => {
+    if (brandToDeleteId === null) return;
 
     setIsSubmitting(true);
     try {
-      const response = await deleteStore(storeToDeleteId);
-      alert(response.message || "Store deleted successfully!");
-      fetchStores();
+      const response = await deleteBrand(brandToDeleteId);
+      alert(response.message || "Brand deleted successfully!");
+      fetchBrands();
     } catch (error: any) {
-      console.error("Error deleting store:", error);
-      alert(`Failed to delete store: ${error.response?.data?.message || error.message}. Please try again.`);
+      console.error("Error deleting brand:", error);
+      alert(`Failed to delete brand: ${error.response?.data?.message || error.message}. Please try again.`);
     } finally {
       setIsSubmitting(false);
       setShowDeleteConfirm(false);
-      setStoreToDeleteId(null);
+      setBrandToDeleteId(null);
     }
-  }, [storeToDeleteId, fetchStores]);
+  }, [brandToDeleteId, fetchBrands]);
 
   const handleSort = (column: string) => {
     if (sortBy === column) {
@@ -185,7 +171,7 @@ export default function StoresPage() {
   return (
     <div className="flex-1 space-y-4 p-4 md:p-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Stores</h2>
+        <h2 className="text-lg font-semibold">Brands</h2>
         <div className="flex items-center space-x-2">
           <Button variant="outline" size="sm" className="bg-[#EE2C2C]">
             <FileText className="mr-2 h-4 w-4" />
@@ -197,7 +183,7 @@ export default function StoresPage() {
           </Button>
           <Button size="sm" className="bg-[#FF9025] hover:bg-[#FF9025]/90" onClick={() => setShowAddForm(true)}>
             <PlusCircle className="mr-2 h-4 w-4" />
-            Add Store
+            Add Brand
           </Button>
         </div>
       </div>
@@ -206,7 +192,7 @@ export default function StoresPage() {
         <div className="flex-1 max-w-md mr-4">
           <Input
             type="text"
-            placeholder="Search stores..."
+            placeholder="Search brands..."
             value={searchQuery}
             onChange={handleSearch}
             className="w-full"
@@ -231,10 +217,9 @@ export default function StoresPage() {
           <TableHeader>
             <TableRow className="bg-[#F2F2F2]">
               <TableHead className="w-[50px]"><input type="checkbox" className="h-4 w-4" /></TableHead>
-              <TableHead onClick={() => handleSort("name")}>Store {sortBy === "name" && (sortDir === "asc" ? <ArrowUp className="inline h-4 w-4" /> : <ArrowDown className="inline h-4 w-4" />)}</TableHead>
-              <TableHead onClick={() => handleSort("userName")}>User Name {sortBy === "userName" && (sortDir === "asc" ? <ArrowUp className="inline h-4 w-4" /> : <ArrowDown className="inline h-4 w-4" />)}</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Phone</TableHead>
+              <TableHead onClick={() => handleSort("name")}>Brand {sortBy === "name" && (sortDir === "asc" ? <ArrowUp className="inline h-4 w-4" /> : <ArrowDown className="inline h-4 w-4" />)}</TableHead>
+              <TableHead>Image</TableHead>
+              <TableHead onClick={() => handleSort("createdAt")}>Created Date {sortBy === "createdAt" && (sortDir === "asc" ? <ArrowUp className="inline h-4 w-4" /> : <ArrowDown className="inline h-4 w-4" />)}</TableHead>
               <TableHead onClick={() => handleSort("status")}>Status {sortBy === "status" && (sortDir === "asc" ? <ArrowUp className="inline h-4 w-4" /> : <ArrowDown className="inline h-4 w-4" />)}</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
@@ -242,39 +227,43 @@ export default function StoresPage() {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8">
-                  Loading stores...
+                <TableCell colSpan={6} className="text-center py-8">
+                  Loading brands...
                 </TableCell>
               </TableRow>
             ) : error ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8 text-red-500">
+                <TableCell colSpan={6} className="text-center py-8 text-red-500">
                   {error}
                 </TableCell>
               </TableRow>
-            ) : stores && stores.length === 0 ? (
+            ) : brands && brands.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8">
-                  No stores found.
+                <TableCell colSpan={6} className="text-center py-8">
+                  No brands found.
                 </TableCell>
               </TableRow>
             ) : (
-              (stores || []).map((store) => (
-                <TableRow key={store.id}>
+              (brands || []).map((brand) => (
+                <TableRow key={brand.id}>
                   <TableCell><input type="checkbox" className="h-4 w-4" /></TableCell>
-                  <TableCell className="font-medium">{store.name}</TableCell>
-                  <TableCell>{store.userName}</TableCell>
-                  <TableCell>{store.email}</TableCell>
-                  <TableCell>{store.phone}</TableCell>
+                  <TableCell className="font-medium">{brand.name}</TableCell>
                   <TableCell>
-                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${store.status === "active" ? "bg-[#3EB780] text-[#FFFFFF]" : "bg-[#EE0000] text-[#FFFFFF]"}`}>
-                      {store.status === "active" ? "• Active" : "• Inactive"}
+                    {brand.imageUrl ? (
+                      <img src={brand.imageUrl} alt={brand.name} className="h-8 w-8 object-contain" />
+                    ) : (
+                      <span className="text-gray-400">-</span>
+                    )}
+                  </TableCell>
+                  <TableCell>{new Date(brand.createdAt).toLocaleDateString()}</TableCell>
+                  <TableCell>
+                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${brand.status === "active" ? "bg-[#3EB780] text-[#FFFFFF]" : "bg-[#EE0000] text-[#FFFFFF]"}`}>
+                      {brand.status === "active" ? "• Active" : "• Inactive"}
                     </span>
                   </TableCell>
                   <TableCell className="flex justify-end gap-2">
-                    <Button variant="ghost" size="icon" onClick={() => handleViewStore(store)}><Eye className="h-4 w-4" /></Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleEditStore(store)} disabled={store.status === "inactive"}><Edit className="h-4 w-4" /></Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDeleteConfirm(store.id)} disabled={store.status === "inactive"}><Trash className="h-4 w-4" /></Button>
+                    <Button variant="ghost" size="icon" onClick={() => handleEditBrand(brand)} disabled={brand.status === "inactive"}><Edit className="h-4 w-4" /></Button>
+                    <Button variant="ghost" size="icon" onClick={() => handleDeleteConfirm(brand.id)} disabled={brand.status === "inactive"}><Trash className="h-4 w-4" /></Button>
                   </TableCell>
                 </TableRow>
               ))
@@ -323,24 +312,18 @@ export default function StoresPage() {
         </Pagination>
       </div>
 
-      <StoreForm
+      <BrandForm
         isOpen={showAddForm}
         onClose={() => setShowAddForm(false)}
-        onSubmit={handleCreateStore}
+        onSubmit={handleCreateBrand}
         isLoading={isSubmitting}
       />
 
-      <StoreDetailModal
-        isOpen={showDetailModal}
-        onClose={() => setShowDetailModal(false)}
-        store={selectedStore}
-      />
-
-      <StoreForm
+      <BrandForm
         isOpen={showEditForm}
         onClose={() => setShowEditForm(false)}
-        store={selectedStore || undefined}
-        onSubmit={handleUpdateStore}
+        brand={selectedBrand || undefined}
+        onSubmit={handleUpdateBrand}
         isLoading={isSubmitting}
       />
 
@@ -349,13 +332,13 @@ export default function StoresPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the store
+              This action cannot be undone. This will permanently delete the brand
               and remove its data from our servers.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isSubmitting}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteStore} disabled={isSubmitting} className="bg-red-500 hover:bg-red-600 text-white">
+            <AlertDialogAction onClick={handleDeleteBrand} disabled={isSubmitting} className="bg-red-500 hover:bg-red-600 text-white">
               {isSubmitting ? "Deleting..." : "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -364,3 +347,4 @@ export default function StoresPage() {
     </div>
   );
 }
+

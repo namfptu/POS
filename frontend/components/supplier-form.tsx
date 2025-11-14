@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Supplier } from "@/lib/api"; // Changed from Customer to Supplier
+import { Supplier } from "@/lib/api/suppliers"; // Changed from Customer to Supplier
 
 interface SupplierFormProps {
   isOpen: boolean;

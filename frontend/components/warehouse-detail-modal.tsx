@@ -1,7 +1,7 @@
 "use client";
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Warehouse } from "@/lib/api"; // Changed from Customer to Warehouse
+import { Warehouse } from "@/lib/api/warehouses"; // Changed from Customer to Warehouse
 
 interface WarehouseDetailModalProps {
   isOpen: boolean;

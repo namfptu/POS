@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Eye, EyeOff, Facebook, Chrome, Apple, User, Mail } from "lucide-react"
-import { register } from "@/lib/api" // Import hàm register từ tệp api.ts của bạn
+import { register } from "@/lib/api/auth"; // Import hàm register từ tệp api.ts của bạn
 
 export function RegisterForm() {
   const [name, setName] = useState("")

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
-import { forgotPassword } from "@/lib/api"; // Import the API function
+import { forgotPassword } from "@/lib/api/auth"; // Import the API function
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");

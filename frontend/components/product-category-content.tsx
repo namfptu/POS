@@ -112,7 +112,7 @@ const products: Product[] = [
   },
 ]
 
-export function CategoryContent() {
+export function ProductCategoryContent() {
   const [selectedCategory, setSelectedCategory] = useState("1")
   const [searchQuery, setSearchQuery] = useState("")
 

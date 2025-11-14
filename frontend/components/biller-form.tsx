@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Biller } from "@/lib/api"; // Changed from Customer to Biller
+import { Biller } from "@/lib/api/billers"; // Changed from Customer to Biller
 
 interface BillerFormProps {
   isOpen: boolean;

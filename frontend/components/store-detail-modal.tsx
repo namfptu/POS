@@ -1,5 +1,5 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Store } from "@/lib/api";
+import { Store } from "@/lib/api/stores";
 
 interface StoreDetailModalProps {
   isOpen: boolean;

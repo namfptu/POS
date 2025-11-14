@@ -7,7 +7,7 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationPrevious, PaginationNext } from "@/components/ui/pagination";
 import { PlusCircle, Search, Eye, Edit, Trash, FileDown, FileText, ArrowUp, ArrowDown } from "lucide-react";
-import { getWarehouses, Warehouse, WarehouseListResponse, createWarehouse, updateWarehouse, deleteWarehouse, UpdateWarehousePayload } from "@/lib/api";
+import { getWarehouses, Warehouse, WarehouseListResponse, createWarehouse, updateWarehouse, deleteWarehouse, UpdateWarehousePayload } from "@/lib/api/warehouses";
 import { WarehouseForm } from "@/components/warehouse-form";
 import { WarehouseDetailModal } from "@/components/warehouse-detail-modal";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
@@ -44,7 +44,7 @@ export default function WarehousesPage() {
     setIsLoading(true);
     setError(null);
     try {
-      const fetchedStatus = filterStatus === "All" ? undefined : filterStatus.toUpperCase() as "ACTIVE" | "INACTIVE" | "DELETED"; // Added "DELETED" status
+      const fetchedStatus = filterStatus === "All" ? undefined : filterStatus; // Removed .toUpperCase() to match backend lowercase
 
       const data = await getWarehouses({
         page: currentPage - 1,
@@ -243,7 +243,7 @@ export default function WarehousesPage() {
               <TableRow>
                 <TableCell colSpan={10} className="text-center py-8"> {/* Adjusted colSpan to 10 */}
                   Loading warehouses...
-                </TableCell>
+                </TableCell>                                      
               </TableRow>
             ) : error ? (
               <TableRow>

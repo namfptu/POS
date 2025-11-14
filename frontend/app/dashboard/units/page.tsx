@@ -7,17 +7,15 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationPrevious, PaginationNext } from "@/components/ui/pagination";
 import { PlusCircle, Search, Eye, Edit, Trash, FileDown, FileText, ArrowUp, ArrowDown } from "lucide-react";
-import { getStores, Store, StoreListResponse, createStore, updateStore, deleteStore, CreateStorePayload, UpdateStorePayload } from "@/lib/api/stores";
-import { StoreForm } from "@/components/store-form";
-import { StoreDetailModal } from "@/components/store-detail-modal";
+import { getUnits, Unit, UnitListResponse, createUnit, updateUnit, deleteUnit, CreateUnitPayload, UpdateUnitPayload } from "@/lib/api/units";
+import { UnitForm } from "@/components/unit-form";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
-export default function StoresPage() {
-  // const { user } = useAuth(); // Removed: No longer need user context for Stores page
+export default function UnitsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<"All" | "active" | "inactive">("All");
-  const [stores, setStores] = useState<Store[]>([]);
-  const [pagination, setPagination] = useState<Omit<StoreListResponse, 'stores'>>({
+  const [units, setUnits] = useState<Unit[]>([]);
+  const [pagination, setPagination] = useState<Omit<UnitListResponse, 'units'>>({
     pageNo: 0,
     pageSize: 10,
     totalElements: 0,
@@ -31,13 +29,12 @@ export default function StoresPage() {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [showDetailModal, setShowDetailModal] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
-  const [selectedStore, setSelectedStore] = useState<Store | null>(null);
-  const [sortBy, setSortBy] = useState<string | undefined>(undefined); // Added sortBy state
-  const [sortDir, setSortDir] = useState<"asc" | "desc" | undefined>(undefined); // Added sortDir state
+  const [selectedUnit, setSelectedUnit] = useState<Unit | null>(null);
+  const [sortBy, setSortBy] = useState<string | undefined>(undefined); 
+  const [sortDir, setSortDir] = useState<"asc" | "desc" | undefined>(undefined); 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [storeToDeleteId, setStoreToDeleteId] = useState<number | null>(null);
+  const [unitToDeleteId, setUnitToDeleteId] = useState<number | null>(null);
 
   const handlePageSizeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setPageSize(Number(e.target.value));
@@ -58,21 +55,21 @@ export default function StoresPage() {
     setCurrentPage(1);
   };
 
-  const fetchStores = useCallback(async () => {
+  const fetchUnits = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const fetchedStatus = filterStatus === "All" ? undefined : filterStatus; // Removed .toUpperCase()
+      const fetchedStatus = filterStatus === "All" ? undefined : filterStatus;
 
-      const data = await getStores({
+      const data = await getUnits({
         page: currentPage - 1,
         size: pageSize,
         search: searchQuery || undefined,
         status: fetchedStatus,
-        sortBy: sortBy, // Pass sortBy
-        sortDir: sortDir, // Pass sortDir
+        sortBy: sortBy,
+        sortDir: sortDir,
       });
-      setStores(data.stores);
+      setUnits(data.units);
       setPagination({
         pageNo: data.pageNo,
         pageSize: data.pageSize,
@@ -82,96 +79,85 @@ export default function StoresPage() {
         last: data.last,
       });
     } catch (err) {
-      console.error("Failed to fetch stores:", err);
-      setError("Failed to load stores. Please try again later.");
+      console.error("Failed to fetch units:", err);
+      setError("Failed to load units. Please try again later.");
     } finally {
       setIsLoading(false);
     }
-  }, [currentPage, pageSize, searchQuery, filterStatus, sortBy, sortDir]); // Added sortBy and sortDir to dependencies
+  }, [currentPage, pageSize, searchQuery, filterStatus, sortBy, sortDir]);
 
-  const handleCreateStore = useCallback(async (storeData: CreateStorePayload) => {
+  const handleCreateUnit = useCallback(async (unitData: CreateUnitPayload) => {
     setIsSubmitting(true);
     try {
-      const response = await createStore(storeData);
-      alert("Store added successfully!");
+      const response = await createUnit(unitData);
+      alert("Unit added successfully!");
       setShowAddForm(false);
-      fetchStores();
+      fetchUnits();
     } catch (error: any) {
-      console.error("Error creating store:", error);
-      alert(`Failed to add store: ${error.response?.data?.message || error.message}. Please try again.`);
+      console.error("Error creating unit:", error);
+      alert(`Failed to add unit: ${error.response?.data?.message || error.message}. Please try again.`);
     } finally {
       setIsSubmitting(false);
     }
-  }, [fetchStores]);
+  }, [fetchUnits]);
 
   useEffect(() => {
-    fetchStores();
-  }, [fetchStores]);
+    fetchUnits();
+  }, [fetchUnits]);
 
-  const handleViewStore = useCallback((store: Store) => {
-    setSelectedStore(store);
-    setShowDetailModal(true);
-  }, []);
-
-  const handleEditStore = useCallback((store: Store) => {
-    setSelectedStore(store);
+  const handleEditUnit = useCallback((unit: Unit) => {
+    setSelectedUnit(unit);
     setShowEditForm(true);
   }, []);
 
-  const handleUpdateStore = useCallback(async (storeData: UpdateStorePayload, id?: number) => {
+  const handleUpdateUnit = useCallback(async (unitData: UpdateUnitPayload, id?: number) => {
     if (!id) {
-      alert("Store ID is missing for update.");
+      alert("Unit ID is missing for update.");
       return;
     }
 
-    const payload: UpdateStorePayload = {
-      name: storeData.name,
-      email: storeData.email,
-      phone: storeData.phone,
-      address: storeData.address,
-      city: storeData.city,
-      country: storeData.country,
-      warehouseId: storeData.warehouseId,
-      userId: storeData.userId,
-      status: storeData.status,
+    const payload: UpdateUnitPayload = {
+      name: unitData.name,
+      shortName: unitData.shortName,
+      status: unitData.status,
     };
 
     setIsSubmitting(true);
     try {
-      const response = await updateStore(id, payload);
-      alert("Store updated successfully!");
+      const response = await updateUnit(id, payload);
+      alert("Unit updated successfully!");
       setShowEditForm(false);
-      fetchStores();
+      fetchUnits();
     } catch (error: any) {
-      console.error("Error updating store:", error);
-      alert(`Failed to update store: ${error.response?.data?.message || error.message}. Please try again.`);
+      console.error("Error updating unit:", error);
+      alert(`Failed to update unit: ${error.response?.data?.message || error.message}. Please try again.`);
     } finally {
       setIsSubmitting(false);
     }
-  }, [fetchStores]);
+  }, [fetchUnits]);
 
   const handleDeleteConfirm = useCallback((id: number) => {
-    setStoreToDeleteId(id);
+    setUnitToDeleteId(id);
     setShowDeleteConfirm(true);
   }, []);
 
-  const handleDeleteStore = useCallback(async () => {
-    if (storeToDeleteId === null) return;
+  const handleDeleteUnit = useCallback(async () => {
+    if (unitToDeleteId === null) return;
 
     setIsSubmitting(true);
     try {
-      const response = await deleteStore(storeToDeleteId);
-      alert(response.message || "Store deleted successfully!");
-      fetchStores();
+      const response = await deleteUnit(unitToDeleteId);
+      alert(response.message || "Unit deleted successfully!");
+      fetchUnits();
     } catch (error: any) {
-      console.error("Error deleting store:", error);
-      alert(`Failed to delete store: ${error.response?.data?.message || error.message}. Please try again.`);
+      console.error("Error deleting unit:", error);
+      alert(`Failed to delete unit: ${error.response?.data?.message || error.message}. Please try again.`);
     } finally {
       setIsSubmitting(false);
       setShowDeleteConfirm(false);
-      setStoreToDeleteId(null);
+      setUnitToDeleteId(null);
     }
-  }, [storeToDeleteId, fetchStores]);
+  }, [unitToDeleteId, fetchUnits]);
 
   const handleSort = (column: string) => {
     if (sortBy === column) {
@@ -185,7 +171,7 @@ export default function StoresPage() {
   return (
     <div className="flex-1 space-y-4 p-4 md:p-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Stores</h2>
+        <h2 className="text-lg font-semibold">Units</h2>
         <div className="flex items-center space-x-2">
           <Button variant="outline" size="sm" className="bg-[#EE2C2C]">
             <FileText className="mr-2 h-4 w-4" />
@@ -197,7 +183,7 @@ export default function StoresPage() {
           </Button>
           <Button size="sm" className="bg-[#FF9025] hover:bg-[#FF9025]/90" onClick={() => setShowAddForm(true)}>
             <PlusCircle className="mr-2 h-4 w-4" />
-            Add Store
+            Add Unit
           </Button>
         </div>
       </div>
@@ -206,7 +192,7 @@ export default function StoresPage() {
         <div className="flex-1 max-w-md mr-4">
           <Input
             type="text"
-            placeholder="Search stores..."
+            placeholder="Search units..."
             value={searchQuery}
             onChange={handleSearch}
             className="w-full"
@@ -231,10 +217,10 @@ export default function StoresPage() {
           <TableHeader>
             <TableRow className="bg-[#F2F2F2]">
               <TableHead className="w-[50px]"><input type="checkbox" className="h-4 w-4" /></TableHead>
-              <TableHead onClick={() => handleSort("name")}>Store {sortBy === "name" && (sortDir === "asc" ? <ArrowUp className="inline h-4 w-4" /> : <ArrowDown className="inline h-4 w-4" />)}</TableHead>
-              <TableHead onClick={() => handleSort("userName")}>User Name {sortBy === "userName" && (sortDir === "asc" ? <ArrowUp className="inline h-4 w-4" /> : <ArrowDown className="inline h-4 w-4" />)}</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Phone</TableHead>
+              <TableHead onClick={() => handleSort("name")}>Unit {sortBy === "name" && (sortDir === "asc" ? <ArrowUp className="inline h-4 w-4" /> : <ArrowDown className="inline h-4 w-4" />)}</TableHead>
+              <TableHead>Short Name</TableHead>
+              <TableHead onClick={() => handleSort("noOfProducts")}>No of Products {sortBy === "noOfProducts" && (sortDir === "asc" ? <ArrowUp className="inline h-4 w-4" /> : <ArrowDown className="inline h-4 w-4" />)}</TableHead>
+              <TableHead onClick={() => handleSort("createdDate")}>Created Date {sortBy === "createdDate" && (sortDir === "asc" ? <ArrowUp className="inline h-4 w-4" /> : <ArrowDown className="inline h-4 w-4" />)}</TableHead>
               <TableHead onClick={() => handleSort("status")}>Status {sortBy === "status" && (sortDir === "asc" ? <ArrowUp className="inline h-4 w-4" /> : <ArrowDown className="inline h-4 w-4" />)}</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
@@ -243,7 +229,7 @@ export default function StoresPage() {
             {isLoading ? (
               <TableRow>
                 <TableCell colSpan={7} className="text-center py-8">
-                  Loading stores...
+                  Loading units...
                 </TableCell>
               </TableRow>
             ) : error ? (
@@ -252,29 +238,28 @@ export default function StoresPage() {
                   {error}
                 </TableCell>
               </TableRow>
-            ) : stores && stores.length === 0 ? (
+            ) : units && units.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} className="text-center py-8">
-                  No stores found.
+                  No units found.
                 </TableCell>
               </TableRow>
             ) : (
-              (stores || []).map((store) => (
-                <TableRow key={store.id}>
+              (units || []).map((unit) => (
+                <TableRow key={unit.id}>
                   <TableCell><input type="checkbox" className="h-4 w-4" /></TableCell>
-                  <TableCell className="font-medium">{store.name}</TableCell>
-                  <TableCell>{store.userName}</TableCell>
-                  <TableCell>{store.email}</TableCell>
-                  <TableCell>{store.phone}</TableCell>
+                  <TableCell className="font-medium">{unit.name}</TableCell>
+                  <TableCell>{unit.shortName}</TableCell>
+                  <TableCell>{unit.noOfProducts}</TableCell>
+                  <TableCell>{new Date(unit.createdAt).toLocaleDateString()}</TableCell>
                   <TableCell>
-                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${store.status === "active" ? "bg-[#3EB780] text-[#FFFFFF]" : "bg-[#EE0000] text-[#FFFFFF]"}`}>
-                      {store.status === "active" ? "• Active" : "• Inactive"}
+                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${unit.status === "active" ? "bg-[#3EB780] text-[#FFFFFF]" : "bg-[#EE0000] text-[#FFFFFF]"}`}>
+                      {unit.status === "active" ? "• Active" : "• Inactive"}
                     </span>
                   </TableCell>
                   <TableCell className="flex justify-end gap-2">
-                    <Button variant="ghost" size="icon" onClick={() => handleViewStore(store)}><Eye className="h-4 w-4" /></Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleEditStore(store)} disabled={store.status === "inactive"}><Edit className="h-4 w-4" /></Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDeleteConfirm(store.id)} disabled={store.status === "inactive"}><Trash className="h-4 w-4" /></Button>
+                    <Button variant="ghost" size="icon" onClick={() => handleEditUnit(unit)} disabled={unit.status === "inactive"}><Edit className="h-4 w-4" /></Button>
+                    <Button variant="ghost" size="icon" onClick={() => handleDeleteConfirm(unit.id)} disabled={unit.status === "inactive"}><Trash className="h-4 w-4" /></Button>
                   </TableCell>
                 </TableRow>
               ))
@@ -323,24 +308,18 @@ export default function StoresPage() {
         </Pagination>
       </div>
 
-      <StoreForm
+      <UnitForm
         isOpen={showAddForm}
         onClose={() => setShowAddForm(false)}
-        onSubmit={handleCreateStore}
+        onSubmit={handleCreateUnit}
         isLoading={isSubmitting}
       />
 
-      <StoreDetailModal
-        isOpen={showDetailModal}
-        onClose={() => setShowDetailModal(false)}
-        store={selectedStore}
-      />
-
-      <StoreForm
+      <UnitForm
         isOpen={showEditForm}
         onClose={() => setShowEditForm(false)}
-        store={selectedStore || undefined}
-        onSubmit={handleUpdateStore}
+        unit={selectedUnit || undefined}
+        onSubmit={handleUpdateUnit}
         isLoading={isSubmitting}
       />
 
@@ -349,13 +328,13 @@ export default function StoresPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the store
+              This action cannot be undone. This will permanently delete the unit
               and remove its data from our servers.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isSubmitting}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteStore} disabled={isSubmitting} className="bg-red-500 hover:bg-red-600 text-white">
+            <AlertDialogAction onClick={handleDeleteUnit} disabled={isSubmitting} className="bg-red-500 hover:bg-red-600 text-white">
               {isSubmitting ? "Deleting..." : "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>

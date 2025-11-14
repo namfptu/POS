@@ -6,18 +6,20 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationPrevious, PaginationNext } from "@/components/ui/pagination";
-import { PlusCircle, Search, Eye, Edit, Trash, FileDown, FileText, ArrowUp, ArrowDown } from "lucide-react";
-import { getStores, Store, StoreListResponse, createStore, updateStore, deleteStore, CreateStorePayload, UpdateStorePayload } from "@/lib/api/stores";
-import { StoreForm } from "@/components/store-form";
-import { StoreDetailModal } from "@/components/store-detail-modal";
+import { PlusCircle, Search, Edit, Trash, FileDown, FileText, ArrowUp, ArrowDown } from "lucide-react";
+import { getSubCategories, SubCategory, SubCategoryListResponse, createSubCategory, updateSubCategory, deleteSubCategory, CreateSubCategoryPayload, UpdateSubCategoryPayload } from "@/lib/api/subcategories";
+import { SubCategoryForm } from "@/components/subcategory-form";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Category, getCategories } from "@/lib/api/categories";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-export default function StoresPage() {
-  // const { user } = useAuth(); // Removed: No longer need user context for Stores page
+export default function SubCategoriesPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<"All" | "active" | "inactive">("All");
-  const [stores, setStores] = useState<Store[]>([]);
-  const [pagination, setPagination] = useState<Omit<StoreListResponse, 'stores'>>({
+  const [filterCategory, setFilterCategory] = useState<string>("All");
+  const [subCategories, setSubCategories] = useState<SubCategory[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [pagination, setPagination] = useState<Omit<SubCategoryListResponse, 'subCategories'>>({
     pageNo: 0,
     pageSize: 10,
     totalElements: 0,
@@ -31,13 +33,12 @@ export default function StoresPage() {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [showDetailModal, setShowDetailModal] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
-  const [selectedStore, setSelectedStore] = useState<Store | null>(null);
-  const [sortBy, setSortBy] = useState<string | undefined>(undefined); // Added sortBy state
-  const [sortDir, setSortDir] = useState<"asc" | "desc" | undefined>(undefined); // Added sortDir state
+  const [selectedSubCategory, setSelectedSubCategory] = useState<SubCategory | null>(null);
+  const [sortBy, setSortBy] = useState<string | undefined>(undefined);
+  const [sortDir, setSortDir] = useState<"asc" | "desc" | undefined>(undefined);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [storeToDeleteId, setStoreToDeleteId] = useState<number | null>(null);
+  const [subCategoryToDeleteId, setSubCategoryToDeleteId] = useState<number | null>(null);
 
   const handlePageSizeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setPageSize(Number(e.target.value));
@@ -58,21 +59,29 @@ export default function StoresPage() {
     setCurrentPage(1);
   };
 
-  const fetchStores = useCallback(async () => {
+  const handleFilterCategoryChange = (categoryId: string) => {
+    setFilterCategory(categoryId);
+    setCurrentPage(1);
+  };
+
+  // Fetch subcategories
+  const fetchSubCategories = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const fetchedStatus = filterStatus === "All" ? undefined : filterStatus; // Removed .toUpperCase()
+      const fetchedStatus = filterStatus === "All" ? undefined : filterStatus;
+      const fetchedCategoryId = filterCategory === "All" ? undefined : parseInt(filterCategory, 10);
 
-      const data = await getStores({
+      const data = await getSubCategories({
         page: currentPage - 1,
         size: pageSize,
         search: searchQuery || undefined,
         status: fetchedStatus,
-        sortBy: sortBy, // Pass sortBy
-        sortDir: sortDir, // Pass sortDir
+        sortBy: sortBy,
+        sortDir: sortDir,
+        categoryId: fetchedCategoryId,
       });
-      setStores(data.stores);
+      setSubCategories(data.subCategories);
       setPagination({
         pageNo: data.pageNo,
         pageSize: data.pageSize,
@@ -82,96 +91,101 @@ export default function StoresPage() {
         last: data.last,
       });
     } catch (err) {
-      console.error("Failed to fetch stores:", err);
-      setError("Failed to load stores. Please try again later.");
+      console.error("Failed to fetch subcategories:", err);
+      setError("Failed to load subcategories. Please try again later.");
     } finally {
       setIsLoading(false);
     }
-  }, [currentPage, pageSize, searchQuery, filterStatus, sortBy, sortDir]); // Added sortBy and sortDir to dependencies
+  }, [currentPage, pageSize, searchQuery, filterStatus, filterCategory, sortBy, sortDir]);
 
-  const handleCreateStore = useCallback(async (storeData: CreateStorePayload) => {
+  // Fetch categories for the filter dropdown
+  useEffect(() => {
+    const fetchCategoriesData = async () => {
+      try {
+        const data = await getCategories({}); // Fetch all categories
+        setCategories(data.categories);
+      } catch (error) {
+        console.error("Error fetching categories for filter:", error);
+      }
+    };
+    fetchCategoriesData();
+  }, []);
+
+  const handleCreateSubCategory = useCallback(async (subCategoryData: CreateSubCategoryPayload) => {
     setIsSubmitting(true);
     try {
-      const response = await createStore(storeData);
-      alert("Store added successfully!");
+      await createSubCategory(subCategoryData);
+      alert("Sub Category added successfully!");
       setShowAddForm(false);
-      fetchStores();
+      fetchSubCategories();
     } catch (error: any) {
-      console.error("Error creating store:", error);
-      alert(`Failed to add store: ${error.response?.data?.message || error.message}. Please try again.`);
+      console.error("Error creating subcategory:", error);
+      alert(`Failed to add sub category: ${error.response?.data?.message || error.message}. Please try again.`);
     } finally {
       setIsSubmitting(false);
     }
-  }, [fetchStores]);
+  }, [fetchSubCategories]);
 
   useEffect(() => {
-    fetchStores();
-  }, [fetchStores]);
+    fetchSubCategories();
+  }, [fetchSubCategories]);
 
-  const handleViewStore = useCallback((store: Store) => {
-    setSelectedStore(store);
-    setShowDetailModal(true);
-  }, []);
-
-  const handleEditStore = useCallback((store: Store) => {
-    setSelectedStore(store);
+  const handleEditSubCategory = useCallback((subCategory: SubCategory) => {
+    setSelectedSubCategory(subCategory);
     setShowEditForm(true);
   }, []);
 
-  const handleUpdateStore = useCallback(async (storeData: UpdateStorePayload, id?: number) => {
+  const handleUpdateSubCategory = useCallback(async (subCategoryData: UpdateSubCategoryPayload, id?: number) => {
     if (!id) {
-      alert("Store ID is missing for update.");
+      alert("Sub Category ID is missing for update.");
       return;
     }
 
-    const payload: UpdateStorePayload = {
-      name: storeData.name,
-      email: storeData.email,
-      phone: storeData.phone,
-      address: storeData.address,
-      city: storeData.city,
-      country: storeData.country,
-      warehouseId: storeData.warehouseId,
-      userId: storeData.userId,
-      status: storeData.status,
+    const payload: UpdateSubCategoryPayload = {
+      name: subCategoryData.name,
+      code: subCategoryData.code, // Changed from slug to code
+      categoryId: subCategoryData.categoryId,
+      status: subCategoryData.status,
+      imageUrl: subCategoryData.imageUrl,
+      description: subCategoryData.description,
     };
 
     setIsSubmitting(true);
     try {
-      const response = await updateStore(id, payload);
-      alert("Store updated successfully!");
+      await updateSubCategory(id, payload);
+      alert("Sub Category updated successfully!");
       setShowEditForm(false);
-      fetchStores();
+      fetchSubCategories();
     } catch (error: any) {
-      console.error("Error updating store:", error);
-      alert(`Failed to update store: ${error.response?.data?.message || error.message}. Please try again.`);
+      console.error("Error updating subcategory:", error);
+      alert(`Failed to update sub category: ${error.response?.data?.message || error.message}. Please try again.`);
     } finally {
       setIsSubmitting(false);
     }
-  }, [fetchStores]);
+  }, [fetchSubCategories]);
 
   const handleDeleteConfirm = useCallback((id: number) => {
-    setStoreToDeleteId(id);
+    setSubCategoryToDeleteId(id);
     setShowDeleteConfirm(true);
   }, []);
 
-  const handleDeleteStore = useCallback(async () => {
-    if (storeToDeleteId === null) return;
+  const handleDeleteSubCategory = useCallback(async () => {
+    if (subCategoryToDeleteId === null) return;
 
     setIsSubmitting(true);
     try {
-      const response = await deleteStore(storeToDeleteId);
-      alert(response.message || "Store deleted successfully!");
-      fetchStores();
+      await deleteSubCategory(subCategoryToDeleteId);
+      alert("Sub Category deleted successfully!");
+      fetchSubCategories();
     } catch (error: any) {
-      console.error("Error deleting store:", error);
-      alert(`Failed to delete store: ${error.response?.data?.message || error.message}. Please try again.`);
+      console.error("Error deleting subcategory:", error);
+      alert(`Failed to delete sub category: ${error.response?.data?.message || error.message}. Please try again.`);
     } finally {
       setIsSubmitting(false);
       setShowDeleteConfirm(false);
-      setStoreToDeleteId(null);
+      setSubCategoryToDeleteId(null);
     }
-  }, [storeToDeleteId, fetchStores]);
+  }, [subCategoryToDeleteId, fetchSubCategories]);
 
   const handleSort = (column: string) => {
     if (sortBy === column) {
@@ -185,7 +199,7 @@ export default function StoresPage() {
   return (
     <div className="flex-1 space-y-4 p-4 md:p-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Stores</h2>
+        <h2 className="text-lg font-semibold">Sub Categories</h2>
         <div className="flex items-center space-x-2">
           <Button variant="outline" size="sm" className="bg-[#EE2C2C]">
             <FileText className="mr-2 h-4 w-4" />
@@ -197,7 +211,7 @@ export default function StoresPage() {
           </Button>
           <Button size="sm" className="bg-[#FF9025] hover:bg-[#FF9025]/90" onClick={() => setShowAddForm(true)}>
             <PlusCircle className="mr-2 h-4 w-4" />
-            Add Store
+            Add Sub Category
           </Button>
         </div>
       </div>
@@ -206,15 +220,31 @@ export default function StoresPage() {
         <div className="flex-1 max-w-md mr-4">
           <Input
             type="text"
-            placeholder="Search stores..."
+            placeholder="Search sub categories..."
             value={searchQuery}
             onChange={handleSearch}
             className="w-full"
           />
         </div>
+        <div className="ml-auto w-[180px]">
+          <Select value={filterCategory} onValueChange={handleFilterCategoryChange}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Filter by Category" />
+            </SelectTrigger>
+
+            <SelectContent>
+              <SelectItem value="All">All Categories</SelectItem>
+              {categories.map((cat) => (
+                <SelectItem key={cat.id} value={cat.id.toString()}>
+                  {cat.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="w-[180px]">
+            <Button variant="outline" className="w-[180px] ml-4">
               Status: {filterStatus}
             </Button>
           </DropdownMenuTrigger>
@@ -231,10 +261,11 @@ export default function StoresPage() {
           <TableHeader>
             <TableRow className="bg-[#F2F2F2]">
               <TableHead className="w-[50px]"><input type="checkbox" className="h-4 w-4" /></TableHead>
-              <TableHead onClick={() => handleSort("name")}>Store {sortBy === "name" && (sortDir === "asc" ? <ArrowUp className="inline h-4 w-4" /> : <ArrowDown className="inline h-4 w-4" />)}</TableHead>
-              <TableHead onClick={() => handleSort("userName")}>User Name {sortBy === "userName" && (sortDir === "asc" ? <ArrowUp className="inline h-4 w-4" /> : <ArrowDown className="inline h-4 w-4" />)}</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Phone</TableHead>
+              <TableHead>Image</TableHead>
+              <TableHead onClick={() => handleSort("name")}>Sub Category {sortBy === "name" && (sortDir === "asc" ? <ArrowUp className="inline h-4 w-4" /> : <ArrowDown className="inline h-4 w-4" />)}</TableHead>
+              <TableHead onClick={() => handleSort("categoryName")}>Category {sortBy === "categoryName" && (sortDir === "asc" ? <ArrowUp className="inline h-4 w-4" /> : <ArrowDown className="inline h-4 w-4" />)}</TableHead>
+              <TableHead onClick={() => handleSort("categoryCode")}>Category Code {sortBy === "categoryCode" && (sortDir === "asc" ? <ArrowUp className="inline h-4 w-4" /> : <ArrowDown className="inline h-4 w-4" />)}</TableHead>
+              <TableHead>Description</TableHead>
               <TableHead onClick={() => handleSort("status")}>Status {sortBy === "status" && (sortDir === "asc" ? <ArrowUp className="inline h-4 w-4" /> : <ArrowDown className="inline h-4 w-4" />)}</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
@@ -242,39 +273,41 @@ export default function StoresPage() {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8">
-                  Loading stores...
+                <TableCell colSpan={8} className="text-center py-8">
+                  Loading sub categories...
                 </TableCell>
               </TableRow>
             ) : error ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8 text-red-500">
+                <TableCell colSpan={8} className="text-center py-8 text-red-500">
                   {error}
                 </TableCell>
               </TableRow>
-            ) : stores && stores.length === 0 ? (
+            ) : subCategories && subCategories.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8">
-                  No stores found.
+                <TableCell colSpan={8} className="text-center py-8">
+                  No sub categories found.
                 </TableCell>
               </TableRow>
             ) : (
-              (stores || []).map((store) => (
-                <TableRow key={store.id}>
+              (subCategories || []).map((subCategory) => (
+                <TableRow key={subCategory.id}>
                   <TableCell><input type="checkbox" className="h-4 w-4" /></TableCell>
-                  <TableCell className="font-medium">{store.name}</TableCell>
-                  <TableCell>{store.userName}</TableCell>
-                  <TableCell>{store.email}</TableCell>
-                  <TableCell>{store.phone}</TableCell>
                   <TableCell>
-                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${store.status === "active" ? "bg-[#3EB780] text-[#FFFFFF]" : "bg-[#EE0000] text-[#FFFFFF]"}`}>
-                      {store.status === "active" ? "• Active" : "• Inactive"}
+                    <img src={subCategory.imageUrl || "/placeholder-logo.png"} alt={subCategory.name} className="h-8 w-8 object-cover rounded-full" />
+                  </TableCell>
+                  <TableCell className="font-medium">{subCategory.name}</TableCell>
+                  <TableCell>{subCategory.categoryName}</TableCell>
+                  <TableCell>{subCategory.code}</TableCell>
+                  <TableCell>{subCategory.description}</TableCell>
+                  <TableCell>
+                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${subCategory.status === "active" ? "bg-[#3EB780] text-[#FFFFFF]" : "bg-[#EE0000] text-[#FFFFFF]"}`}>
+                      {subCategory.status === "active" ? "• Active" : "• Inactive"}
                     </span>
                   </TableCell>
                   <TableCell className="flex justify-end gap-2">
-                    <Button variant="ghost" size="icon" onClick={() => handleViewStore(store)}><Eye className="h-4 w-4" /></Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleEditStore(store)} disabled={store.status === "inactive"}><Edit className="h-4 w-4" /></Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDeleteConfirm(store.id)} disabled={store.status === "inactive"}><Trash className="h-4 w-4" /></Button>
+                    <Button variant="ghost" size="icon" onClick={() => handleEditSubCategory(subCategory)}><Edit className="h-4 w-4" /></Button>
+                    <Button variant="ghost" size="icon" onClick={() => handleDeleteConfirm(subCategory.id)}><Trash className="h-4 w-4" /></Button>
                   </TableCell>
                 </TableRow>
               ))
@@ -323,24 +356,18 @@ export default function StoresPage() {
         </Pagination>
       </div>
 
-      <StoreForm
+      <SubCategoryForm
         isOpen={showAddForm}
         onClose={() => setShowAddForm(false)}
-        onSubmit={handleCreateStore}
+        onSubmit={handleCreateSubCategory}
         isLoading={isSubmitting}
       />
 
-      <StoreDetailModal
-        isOpen={showDetailModal}
-        onClose={() => setShowDetailModal(false)}
-        store={selectedStore}
-      />
-
-      <StoreForm
+      <SubCategoryForm
         isOpen={showEditForm}
         onClose={() => setShowEditForm(false)}
-        store={selectedStore || undefined}
-        onSubmit={handleUpdateStore}
+        subCategory={selectedSubCategory || undefined}
+        onSubmit={handleUpdateSubCategory}
         isLoading={isSubmitting}
       />
 
@@ -349,13 +376,13 @@ export default function StoresPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the store
+              This action cannot be undone. This will permanently delete the sub category
               and remove its data from our servers.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isSubmitting}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteStore} disabled={isSubmitting} className="bg-red-500 hover:bg-red-600 text-white">
+            <AlertDialogAction onClick={handleDeleteSubCategory} disabled={isSubmitting} className="bg-red-500 hover:bg-red-600 text-white">
               {isSubmitting ? "Deleting..." : "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>

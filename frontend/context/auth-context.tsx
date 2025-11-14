@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { login as apiLogin, register as apiRegister } from '@/lib/api'; // Alias imports
+import { login as apiLogin, register as apiRegister } from '@/lib/api/auth';
 
 interface AuthContextType {
   user: { id: string; name: string; email: string; role: string } | null;

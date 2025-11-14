@@ -71,14 +71,27 @@ export function DashboardSidebar({ open, onToggle }: DashboardSidebarProps) {
           <NavItem icon={<Zap className="w-5 h-5" />} label="Low Stocks" open={open} />
           <NavItem
             icon={<Layers className="w-5 h-5" />}
-            label="Category"
-            href="/category"
-            active={pathname === "/category"}
+            label="Product Categories" // Changed label
+            href="/dashboard/product-categories" // Changed href
+            active={pathname === "/dashboard/product-categories"} // Updated active check
             open={open}
           />
-          <NavItem icon={<Tag className="w-5 h-5" />} label="Sub Category" open={open} />
-          <NavItem icon={<Package className="w-5 h-5" />} label="Brands" open={open} />
-          <NavItem icon={<Zap className="w-5 h-5" />} label="Units" open={open} />
+          <NavItem // New NavItem for Categories management
+            icon={<Tag className="w-5 h-5" />}
+            label="Categories"
+            href="/dashboard/categories"
+            active={pathname === "/dashboard/categories"}
+            open={open}
+          />
+          <NavItem // New NavItem for Sub Categories management
+            icon={<Tag className="w-5 h-5" />}
+            label="Sub Category"
+            href="/dashboard/sub-category"
+            active={pathname === "/dashboard/sub-category"}
+            open={open}
+          />
+          <NavItem icon={<Package className="w-5 h-5" />} label="Brands" active={pathname === "/dashboard/brands"} open={open} href="/dashboard/brands" /> {/* Updated Brands NavItem */}
+          <NavItem icon={<Zap className="w-5 h-5" />} label="Units" active={pathname === "/dashboard/units"} open={open} href="/dashboard/units" /> {/* New NavItem for Units */}
           <NavItem icon={<Layers className="w-5 h-5" />} label="Variant Attributes" open={open} />
           <NavItem icon={<Package className="w-5 h-5" />} label="Warranties" open={open} />
           <NavItem icon={<Barcode className="w-5 h-5" />} label="Print Barcode" open={open} />
