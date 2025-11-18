@@ -26,7 +26,7 @@ export const getSuppliers = async (params: {
   page?: number;
   size?: number;
   search?: string;
-  status?: "ACTIVE" | "INACTIVE";
+  status?: "active" | "inactive";
   sortBy?: string;
   sortDir?: "asc" | "desc";
 }) => {
@@ -49,7 +49,7 @@ export const getSupplierById = async (id: string) => {
   }
 };
 
-export const createSupplier = async (supplier: Omit<Supplier, 'id' | 'createdAt' | 'code'> & { email: string; imageUrl?: string | null; }) => {
+export const createSupplier = async (supplier: Omit<Supplier, 'id' | 'createdAt' | 'code'> & { email: string; imageUrl?: string | null; status: "active" | "inactive"; }) => {
   try {
     const response = await api.post<Supplier>('/suppliers', supplier);
     return response.data;

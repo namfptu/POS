@@ -27,7 +27,7 @@ export const getBillers = async (params: {
   page?: number;
   size?: number;
   search?: string;
-  status?: "ACTIVE" | "INACTIVE";
+  status?: "active" | "inactive";
   sortBy?: string;
   sortDir?: "asc" | "desc";
 }) => {
@@ -50,7 +50,7 @@ export const getBillerById = async (id: string) => {
   }
 };
 
-export const createBiller = async (biller: Omit<Biller, 'id' | 'createdAt' | 'code'> & { email: string; companyName: string | null; imageUrl?: string | null; }) => {
+export const createBiller = async (biller: Omit<Biller, 'id' | 'createdAt' | 'code'> & { email: string; companyName: string | null; imageUrl?: string | null; status: "active" | "inactive"; }) => {
   try {
     const response = await api.post<Biller>('/billers', biller);
     return response.data;

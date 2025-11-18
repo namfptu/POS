@@ -16,7 +16,7 @@ import { useAuth } from "@/context/auth-context"; // Import useAuth
 export default function WarehousesPage() {
   const { user } = useAuth(); // Get current user from AuthContext
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterStatus, setFilterStatus] = useState<"All" | "active" | "inactive" | "deleted">("All"); // Added "deleted" status
+  const [filterStatus, setFilterStatus] = useState<"All" | "active" | "inactive">("All"); 
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [pagination, setPagination] = useState<Omit<WarehouseListResponse, 'warehouses'>>({
     pageNo: 0,
@@ -44,7 +44,7 @@ export default function WarehousesPage() {
     setIsLoading(true);
     setError(null);
     try {
-      const fetchedStatus = filterStatus === "All" ? undefined : filterStatus; // Removed .toUpperCase() to match backend lowercase
+      const fetchedStatus = filterStatus === "All" ? undefined : filterStatus.toUpperCase() as "ACTIVE" | "INACTIVE" | "DELETED"; // Converted to uppercase for API
 
       const data = await getWarehouses({
         page: currentPage - 1,
@@ -71,7 +71,7 @@ export default function WarehousesPage() {
     }
   }, [currentPage, pageSize, searchQuery, filterStatus, sortBy, sortDir]); // Added sortBy and sortDir to dependencies
 
-  const handleCreateWarehouse = useCallback(async (warehouseData: Omit<Warehouse, 'id' | 'code' | 'totalProducts' | 'stock' | 'qty' | 'createdOn' | 'status' | 'managingUserName' | 'imageUrl'> & { name: string; contactPerson?: string | null; phone?: string | null; userId: number; }) => {
+  const handleCreateWarehouse = useCallback(async (warehouseData: Omit<Warehouse, 'id' | 'code' | 'totalProducts' | 'stock' | 'qty' | 'createdOn' | 'managingUserName'> & { name: string; contactPerson?: string | null; phone?: string | null; userId: number; status: "active" | "inactive" | "deleted"; imageUrl?: string | null; }) => {
     if (!user?.id) {
       alert("User not authenticated. Please log in.");
       return;
@@ -118,7 +118,7 @@ export default function WarehousesPage() {
     setShowEditForm(true);
   }, []);
 
-  const handleUpdateWarehouse = useCallback(async (warehouseData: Omit<Warehouse, 'id' | 'code' | 'totalProducts' | 'stock' | 'qty' | 'createdOn' | 'status' | 'managingUserName' | 'imageUrl'> & { name: string; contactPerson?: string | null; phone?: string | null; userId?: number; }, id?: number) => { // id is number
+  const handleUpdateWarehouse = useCallback(async (warehouseData: Omit<Warehouse, 'id' | 'code' | 'totalProducts' | 'stock' | 'qty' | 'createdOn' | 'managingUserName'> & { name: string; contactPerson?: string | null; phone?: string | null; userId?: number; status?: "active" | "inactive" | "deleted"; imageUrl?: string | null; }, id?: number) => { // id is number
     if (!id) {
       alert("Warehouse ID is missing for update.");
       return;
@@ -128,7 +128,9 @@ export default function WarehousesPage() {
       name: warehouseData.name,
       contactPerson: warehouseData.contactPerson,
       phone: warehouseData.phone,
-      userId: warehouseData.userId ? Number(warehouseData.userId) : undefined, // Convert to number if exists
+      userId: warehouseData.userId ? Number(warehouseData.userId) : undefined,
+      status: warehouseData.status,
+      imageUrl: warehouseData.imageUrl,
     };
 
     setIsSubmitting(true);
@@ -217,7 +219,7 @@ export default function WarehousesPage() {
             <DropdownMenuItem onClick={() => setFilterStatus("All")}>All</DropdownMenuItem>
             <DropdownMenuItem onClick={() => setFilterStatus("active")}>Active</DropdownMenuItem>
             <DropdownMenuItem onClick={() => setFilterStatus("inactive")}>Inactive</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setFilterStatus("deleted")}>Deleted</DropdownMenuItem>
+            
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

@@ -30,7 +30,7 @@ export const getWarehouses = async (params: {
   page?: number;
   size?: number;
   search?: string;
-  status?: "ACTIVE" | "INACTIVE" | "DELETED"; // Added "DELETED" status
+  status?: "active" | "inactive" | "deleted"; // Added "DELETED" status
   sortBy?: string;
   sortDir?: "asc" | "desc";
 }) => {
@@ -53,7 +53,7 @@ export const getWarehouseById = async (id: number) => {
   }
 };
 
-export const createWarehouse = async (warehouse: Omit<Warehouse, 'id' | 'code' | 'totalProducts' | 'stock' | 'qty' | 'createdOn' | 'status' | 'managingUserName' | 'imageUrl'> & { name: string; contactPerson?: string | null; phone?: string | null; userId: number; }) => {
+export const createWarehouse = async (warehouse: Omit<Warehouse, 'id' | 'code' | 'totalProducts' | 'stock' | 'qty' | 'createdOn' | 'managingUserName'> & { name: string; contactPerson?: string | null; phone?: string | null; userId: number; status: "active" | "inactive" | "deleted"; imageUrl?: string | null; }) => {
   try {
     const response = await api.post<Warehouse>('/warehouses', warehouse);
     return response.data;
@@ -68,6 +68,8 @@ export interface UpdateWarehousePayload {
   contactPerson?: string | null;
   phone?: string | null;
   userId?: number; // Added userId
+  status?: "active" | "inactive" | "deleted";
+  imageUrl?: string | null;
 }
 
 export const updateWarehouse = async (id: number, warehouse: UpdateWarehousePayload) => {

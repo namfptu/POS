@@ -65,7 +65,7 @@ export default function BillersPage() {
     }
   }, [currentPage, pageSize, searchQuery, filterStatus]);
 
-  const handleCreateBiller = useCallback(async (billerData: Omit<Biller, 'id' | 'createdAt' | 'code'> & { email: string; companyName: string | null; imageUrl?: string | null; }) => {
+  const handleCreateBiller = useCallback(async (billerData: Omit<Biller, 'id' | 'createdAt' | 'code'> & { email: string; companyName: string | null; imageUrl?: string | null; status: "active" | "inactive"; }) => {
     setIsSubmitting(true);
     try {
       await createBiller(billerData);
@@ -103,7 +103,7 @@ export default function BillersPage() {
     setShowEditForm(true);
   }, []);
 
-  const handleUpdateBiller = useCallback(async (billerData: Omit<Biller, 'id' | 'createdAt' | 'code'> & { email?: string; companyName?: string | null; imageUrl?: string | null; }, id?: string) => {
+  const handleUpdateBiller = useCallback(async (billerData: Omit<Biller, 'id' | 'createdAt' | 'code'> & { email?: string; companyName?: string | null; imageUrl?: string | null; status?: "active" | "inactive"; }, id?: string) => {
     if (!id) {
       alert("Biller ID is missing for update.");
       return;

@@ -40,10 +40,10 @@ export default function SuppliersPage() {
     setIsLoading(true);
     setError(null);
     try {
-      const fetchedStatus = filterStatus === "All" ? undefined : filterStatus; // Removed .toUpperCase()
+      const fetchedStatus = filterStatus === "All" ? undefined : filterStatus; // Reverted to lowercase as per backend
 
       const data = await getSuppliers({
-        page: currentPage - 1, // Adjust page to be 0-indexed for API
+        page: currentPage - 1, 
         size: pageSize,
         search: searchQuery || undefined,
         status: fetchedStatus,
@@ -237,7 +237,7 @@ export default function SuppliersPage() {
               (suppliers || []).map((supplier) => (
                 <TableRow key={supplier.id}>
                   <TableCell><input type="checkbox" className="h-4 w-4" /></TableCell>
-                  <TableCell className="font-medium">{supplier.id}</TableCell> {/* Changed to supplier.id */}
+                  <TableCell className="font-medium">{supplier.code}</TableCell>
                   <TableCell className="flex items-center gap-2">
                     <img src={supplier.imageUrl || "/placeholder-user.jpg"} alt={supplier.name} className="h-8 w-8 rounded-full object-cover" />
                     <span>{supplier.name}</span>
@@ -343,4 +343,3 @@ export default function SuppliersPage() {
     </div>
   );
 }
-

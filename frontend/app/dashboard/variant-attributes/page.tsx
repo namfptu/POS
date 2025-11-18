@@ -7,19 +7,15 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationPrevious, PaginationNext } from "@/components/ui/pagination";
 import { PlusCircle, Search, Edit, Trash, FileDown, FileText, ArrowUp, ArrowDown } from "lucide-react";
-import { getSubCategories, SubCategory, SubCategoryListResponse, createSubCategory, updateSubCategory, deleteSubCategory, CreateSubCategoryPayload, UpdateSubCategoryPayload } from "@/lib/api/subcategories";
-import { SubCategoryForm } from "@/components/subcategory-form";
+import { getVariantAttributes, VariantAttribute, VariantAttributeListResponse, createVariantAttribute, updateVariantAttribute, deleteVariantAttribute, CreateVariantAttributePayload, UpdateVariantAttributePayload } from "@/lib/api/variant-attributes";
+import { VariantAttributeForm } from "@/components/variant-attribute-form";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Category, getCategories } from "@/lib/api/categories";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-export default function SubCategoriesPage() {
+export default function VariantAttributesPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<"All" | "active" | "inactive">("All");
-  const [filterCategory, setFilterCategory] = useState<string>("All");
-  const [subCategories, setSubCategories] = useState<SubCategory[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [pagination, setPagination] = useState<Omit<SubCategoryListResponse, 'subCategories'>>({
+  const [variantAttributes, setVariantAttributes] = useState<VariantAttribute[]>([]);
+  const [pagination, setPagination] = useState<Omit<VariantAttributeListResponse, 'variantAttributes'>>({
     pageNo: 0,
     pageSize: 10,
     totalElements: 0,
@@ -34,11 +30,11 @@ export default function SubCategoriesPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
-  const [selectedSubCategory, setSelectedSubCategory] = useState<SubCategory | null>(null);
+  const [selectedVariantAttribute, setSelectedVariantAttribute] = useState<VariantAttribute | null>(null);
   const [sortBy, setSortBy] = useState<string | undefined>(undefined);
   const [sortDir, setSortDir] = useState<"asc" | "desc" | undefined>(undefined);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [subCategoryToDeleteId, setSubCategoryToDeleteId] = useState<number | null>(null);
+  const [variantAttributeToDeleteId, setVariantAttributeToDeleteId] = useState<number | null>(null);
 
   const handlePageSizeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setPageSize(Number(e.target.value));
@@ -59,29 +55,21 @@ export default function SubCategoriesPage() {
     setCurrentPage(1);
   };
 
-  const handleFilterCategoryChange = (categoryId: string) => {
-    setFilterCategory(categoryId);
-    setCurrentPage(1);
-  };
-
-  // Fetch subcategories
-  const fetchSubCategories = useCallback(async () => {
+  const fetchVariantAttributes = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
       const fetchedStatus = filterStatus === "All" ? undefined : filterStatus;
-      const fetchedCategoryId = filterCategory === "All" ? undefined : parseInt(filterCategory, 10);
 
-      const data = await getSubCategories({
+      const data = await getVariantAttributes({
         page: currentPage - 1,
         size: pageSize,
         search: searchQuery || undefined,
         status: fetchedStatus,
         sortBy: sortBy,
         sortDir: sortDir,
-        categoryId: fetchedCategoryId,
       });
-      setSubCategories(data.subCategories);
+      setVariantAttributes(data.variantAttributes);
       setPagination({
         pageNo: data.pageNo,
         pageSize: data.pageSize,
@@ -91,101 +79,79 @@ export default function SubCategoriesPage() {
         last: data.last,
       });
     } catch (err) {
-      console.error("Failed to fetch subcategories:", err);
-      setError("Failed to load subcategories. Please try again later.");
+      console.error("Failed to fetch variant attributes:", err);
+      setError("Failed to load variant attributes. Please try again later.");
     } finally {
       setIsLoading(false);
     }
-  }, [currentPage, pageSize, searchQuery, filterStatus, filterCategory, sortBy, sortDir]);
+  }, [currentPage, pageSize, searchQuery, filterStatus, sortBy, sortDir]);
 
-  // Fetch categories for the filter dropdown
-  useEffect(() => {
-    const fetchCategoriesData = async () => {
-      try {
-        const data = await getCategories({}); // Fetch all categories
-        setCategories(data.categories);
-      } catch (error) {
-        console.error("Error fetching categories for filter:", error);
-      }
-    };
-    fetchCategoriesData();
-  }, []);
-
-  const handleCreateSubCategory = useCallback(async (subCategoryData: CreateSubCategoryPayload) => {
+  const handleCreateVariantAttribute = useCallback(async (variantAttributeData: CreateVariantAttributePayload) => {
     setIsSubmitting(true);
     try {
-      await createSubCategory(subCategoryData);
-      alert("Sub Category added successfully!");
+      await createVariantAttribute(variantAttributeData);
+      alert("Variant Attribute added successfully!");
       setShowAddForm(false);
-      fetchSubCategories();
+      fetchVariantAttributes();
     } catch (error: any) {
-      console.error("Error creating subcategory:", error);
-      alert(`Failed to add sub category: ${error.response?.data?.message || error.message}. Please try again.`);
+      console.error("Error creating variant attribute:", error);
+      alert(`Failed to add variant attribute: ${error.response?.data?.message || error.message}. Please try again.`);
     } finally {
       setIsSubmitting(false);
     }
-  }, [fetchSubCategories]);
+  }, [fetchVariantAttributes]);
 
   useEffect(() => {
-    fetchSubCategories();
-  }, [fetchSubCategories]);
+    fetchVariantAttributes();
+  }, [fetchVariantAttributes]);
 
-  const handleEditSubCategory = useCallback((subCategory: SubCategory) => {
-    setSelectedSubCategory(subCategory);
+  const handleEditVariantAttribute = useCallback((variantAttribute: VariantAttribute) => {
+    setSelectedVariantAttribute(variantAttribute);
     setShowEditForm(true);
   }, []);
 
-  const handleUpdateSubCategory = useCallback(async (subCategoryData: UpdateSubCategoryPayload, id?: number) => {
+  const handleUpdateVariantAttribute = useCallback(async (variantAttributeData: UpdateVariantAttributePayload, id?: number) => {
     if (!id) {
-      alert("Sub Category ID is missing for update.");
+      alert("Variant Attribute ID is missing for update.");
       return;
     }
 
-    const payload: UpdateSubCategoryPayload = {
-      name: subCategoryData.name,
-      code: subCategoryData.code, // Changed from slug to code
-      categoryId: subCategoryData.categoryId,
-      status: subCategoryData.status,
-      imageUrl: subCategoryData.imageUrl,
-      description: subCategoryData.description, 
-    };
-
     setIsSubmitting(true);
     try {
-      await updateSubCategory(id, payload);
-      alert("Sub Category updated successfully!");
+      await updateVariantAttribute(id, variantAttributeData);
+      alert("Variant Attribute updated successfully!");
       setShowEditForm(false);
-      fetchSubCategories();
+      fetchVariantAttributes();
     } catch (error: any) {
-      console.error("Error updating subcategory:", error);
-      alert(`Failed to update sub category: ${error.response?.data?.message || error.message}. Please try again.`);
+      console.error("Error updating variant attribute:", error);
+      alert(`Failed to update variant attribute: ${error.response?.data?.message || error.message}. Please try again.`);
     } finally {
       setIsSubmitting(false);
     }
-  }, [fetchSubCategories]);
+  }, [fetchVariantAttributes]);
 
   const handleDeleteConfirm = useCallback((id: number) => {
-    setSubCategoryToDeleteId(id);
+    setVariantAttributeToDeleteId(id);
     setShowDeleteConfirm(true);
   }, []);
 
-  const handleDeleteSubCategory = useCallback(async () => {
-    if (subCategoryToDeleteId === null) return;
+  const handleDeleteVariantAttribute = useCallback(async () => {
+    if (variantAttributeToDeleteId === null) return;
 
     setIsSubmitting(true);
     try {
-      await deleteSubCategory(subCategoryToDeleteId);
-      alert("Sub Category deleted successfully!");
-      fetchSubCategories();
+      await deleteVariantAttribute(variantAttributeToDeleteId);
+      alert("Variant Attribute deleted successfully!");
+      fetchVariantAttributes();
     } catch (error: any) {
-      console.error("Error deleting subcategory:", error);
-      alert(`Failed to delete sub category: ${error.response?.data?.message || error.message}. Please try again.`);
+      console.error("Error deleting variant attribute:", error);
+      alert(`Failed to delete variant attribute: ${error.response?.data?.message || error.message}. Please try again.`);
     } finally {
       setIsSubmitting(false);
       setShowDeleteConfirm(false);
-      setSubCategoryToDeleteId(null);
+      setVariantAttributeToDeleteId(null);
     }
-  }, [subCategoryToDeleteId, fetchSubCategories]);
+  }, [variantAttributeToDeleteId, fetchVariantAttributes]);
 
   const handleSort = (column: string) => {
     if (sortBy === column) {
@@ -199,7 +165,7 @@ export default function SubCategoriesPage() {
   return (
     <div className="flex-1 space-y-4 p-4 md:p-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Sub Categories</h2>
+        <h2 className="text-lg font-semibold">Variant Attributes</h2>
         <div className="flex items-center space-x-2">
           <Button variant="outline" size="sm" className="bg-[#EE2C2C]">
             <FileText className="mr-2 h-4 w-4" />
@@ -211,7 +177,7 @@ export default function SubCategoriesPage() {
           </Button>
           <Button size="sm" className="bg-[#FF9025] hover:bg-[#FF9025]/90" onClick={() => setShowAddForm(true)}>
             <PlusCircle className="mr-2 h-4 w-4" />
-            Add Sub Category
+            Add Variant Attribute
           </Button>
         </div>
       </div>
@@ -220,31 +186,15 @@ export default function SubCategoriesPage() {
         <div className="flex-1 max-w-md mr-4">
           <Input
             type="text"
-            placeholder="Search sub categories..."
+            placeholder="Search variant attributes..."
             value={searchQuery}
             onChange={handleSearch}
             className="w-full"
           />
         </div>
-        <div className="ml-auto w-[180px]">
-          <Select value={filterCategory} onValueChange={handleFilterCategoryChange}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Filter by Category" />
-            </SelectTrigger>
-
-            <SelectContent>
-              <SelectItem value="All">All Categories</SelectItem>
-              {categories.map((cat) => (
-                <SelectItem key={cat.id} value={cat.id.toString()}>
-                  {cat.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="w-[180px] ml-4">
+            <Button variant="outline" className="w-[180px] ml-auto">
               Status: {filterStatus}
             </Button>
           </DropdownMenuTrigger>
@@ -261,11 +211,9 @@ export default function SubCategoriesPage() {
           <TableHeader>
             <TableRow className="bg-[#F2F2F2]">
               <TableHead className="w-[50px]"><input type="checkbox" className="h-4 w-4" /></TableHead>
-              <TableHead>Image</TableHead>
-              <TableHead onClick={() => handleSort("name")}>Sub Category {sortBy === "name" && (sortDir === "asc" ? <ArrowUp className="inline h-4 w-4" /> : <ArrowDown className="inline h-4 w-4" />)}</TableHead>
-              <TableHead onClick={() => handleSort("categoryName")}>Category {sortBy === "categoryName" && (sortDir === "asc" ? <ArrowUp className="inline h-4 w-4" /> : <ArrowDown className="inline h-4 w-4" />)}</TableHead>
-              <TableHead onClick={() => handleSort("categoryCode")}>Category Code {sortBy === "categoryCode" && (sortDir === "asc" ? <ArrowUp className="inline h-4 w-4" /> : <ArrowDown className="inline h-4 w-4" />)}</TableHead>
-              <TableHead>Description</TableHead>
+              <TableHead onClick={() => handleSort("name")}>Variant {sortBy === "name" && (sortDir === "asc" ? <ArrowUp className="inline h-4 w-4" /> : <ArrowDown className="inline h-4 w-4" />)}</TableHead>
+              <TableHead>Values</TableHead>
+              <TableHead onClick={() => handleSort("createdAt")}>Created Date {sortBy === "createdAt" && (sortDir === "asc" ? <ArrowUp className="inline h-4 w-4" /> : <ArrowDown className="inline h-4 w-4" />)}</TableHead>
               <TableHead onClick={() => handleSort("status")}>Status {sortBy === "status" && (sortDir === "asc" ? <ArrowUp className="inline h-4 w-4" /> : <ArrowDown className="inline h-4 w-4" />)}</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
@@ -273,41 +221,37 @@ export default function SubCategoriesPage() {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-8">
-                  Loading sub categories...
+                <TableCell colSpan={6} className="text-center py-8">
+                  Loading variant attributes...
                 </TableCell>
               </TableRow>
             ) : error ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-8 text-red-500">
+                <TableCell colSpan={6} className="text-center py-8 text-red-500">
                   {error}
                 </TableCell>
               </TableRow>
-            ) : subCategories && subCategories.length === 0 ? (
+            ) : variantAttributes && variantAttributes.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-8">
-                  No sub categories found.
+                <TableCell colSpan={6} className="text-center py-8">
+                  No variant attributes found.
                 </TableCell>
               </TableRow>
             ) : (
-              (subCategories || []).map((subCategory) => (
-                <TableRow key={subCategory.id}>
+              (variantAttributes || []).map((variantAttribute) => (
+                <TableRow key={variantAttribute.id}>
                   <TableCell><input type="checkbox" className="h-4 w-4" /></TableCell>
+                  <TableCell className="font-medium">{variantAttribute.name}</TableCell>
+                  <TableCell>{variantAttribute.values.join(', ')}</TableCell>
+                  <TableCell>{new Date(variantAttribute.createdAt).toLocaleDateString()}</TableCell>
                   <TableCell>
-                    <img src={subCategory.imageUrl || "/placeholder-logo.png"} alt={subCategory.name} className="h-8 w-8 object-cover rounded-full" />
-                  </TableCell>
-                  <TableCell className="font-medium">{subCategory.name}</TableCell>
-                  <TableCell>{subCategory.categoryName}</TableCell>
-                  <TableCell>{subCategory.code}</TableCell>
-                  <TableCell>{subCategory.description}</TableCell>
-                  <TableCell>
-                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${subCategory.status === "active" ? "bg-[#3EB780] text-[#FFFFFF]" : "bg-[#EE0000] text-[#FFFFFF]"}`}>
-                      {subCategory.status === "active" ? "• Active" : "• Inactive"}
+                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${variantAttribute.status === "active" ? "bg-[#3EB780] text-[#FFFFFF]" : "bg-red-100 text-red-800"}`}>
+                      {variantAttribute.status === "active" ? "• Active" : "Inactive"}
                     </span>
                   </TableCell>
                   <TableCell className="flex justify-end gap-2">
-                    <Button variant="ghost" size="icon" onClick={() => handleEditSubCategory(subCategory)}><Edit className="h-4 w-4" /></Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDeleteConfirm(subCategory.id)}><Trash className="h-4 w-4" /></Button>
+                    <Button variant="ghost" size="icon" onClick={() => handleEditVariantAttribute(variantAttribute)}><Edit className="h-4 w-4" /></Button>
+                    <Button variant="ghost" size="icon" onClick={() => handleDeleteConfirm(variantAttribute.id)}><Trash className="h-4 w-4" /></Button>
                   </TableCell>
                 </TableRow>
               ))
@@ -356,18 +300,18 @@ export default function SubCategoriesPage() {
         </Pagination>
       </div>
 
-      <SubCategoryForm
+      <VariantAttributeForm
         isOpen={showAddForm}
         onClose={() => setShowAddForm(false)}
-        onSubmit={handleCreateSubCategory}
+        onSubmit={handleCreateVariantAttribute}
         isLoading={isSubmitting}
       />
 
-      <SubCategoryForm
+      <VariantAttributeForm
         isOpen={showEditForm}
         onClose={() => setShowEditForm(false)}
-        subCategory={selectedSubCategory || undefined}
-        onSubmit={handleUpdateSubCategory}
+        variantAttribute={selectedVariantAttribute || undefined}
+        onSubmit={handleUpdateVariantAttribute}
         isLoading={isSubmitting}
       />
 
@@ -376,13 +320,13 @@ export default function SubCategoriesPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the sub category
+              This action cannot be undone. This will permanently delete the variant attribute
               and remove its data from our servers.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isSubmitting}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteSubCategory} disabled={isSubmitting} className="bg-red-500 hover:bg-red-600 text-white">
+            <AlertDialogAction onClick={handleDeleteVariantAttribute} disabled={isSubmitting} className="bg-red-500 hover:bg-red-600 text-white">
               {isSubmitting ? "Deleting..." : "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>

@@ -6,22 +6,22 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Warehouse } from "@/lib/api/warehouses";
+import { Warehouse } from "@/lib/api/warehouses"; // Changed from Biller to Warehouse
 
 interface WarehouseFormProps {
   isOpen: boolean;
   onClose: () => void;
   warehouse?: Warehouse; // Optional warehouse object for editing
-  onSubmit: (warehouse: Omit<Warehouse, 'id' | 'code' | 'totalProducts' | 'stock' | 'qty' | 'createdOn' | 'status' | 'managingUserName' | 'imageUrl'> & { name: string; contactPerson?: string | null; phone?: string | null; userId: number; }, id?: number) => Promise<void>; // Updated for Warehouse, id is number now, userId is number
+  onSubmit: (warehouse: Omit<Warehouse, 'id' | 'code' | 'totalProducts' | 'stock' | 'qty' | 'createdOn' | 'managingUserName'> & { name: string; contactPerson?: string | null; phone?: string | null; userId: number; status: "active" | "inactive" | "deleted"; imageUrl?: string | null; }, id?: number) => Promise<void>; // Updated for Warehouse, id is number now, userId is number
   isLoading: boolean;
   currentUserId: number; // Added currentUserId prop
 }
 
-export function WarehouseForm({ isOpen, onClose, warehouse, onSubmit, isLoading, currentUserId }: WarehouseFormProps) {
+export function WarehouseForm({ isOpen, onClose, warehouse, onSubmit, isLoading, currentUserId }: WarehouseFormProps) { // Changed component name
   const [name, setName] = useState(warehouse?.name || "");
   const [phone, setPhone] = useState(warehouse?.phone || "");
-  const [contactPerson, setContactPerson] = useState(warehouse?.contactPerson || "");
-  const [status, setStatus] = useState<"active" | "inactive" | "deleted">(warehouse?.status || "active"); // Status can be passed for create/update, but backend rules will handle 'deleted'
+  const [contactPerson, setContactPerson] = useState(warehouse?.contactPerson || ""); // Changed from companyName to contactPerson
+  const [status, setStatus] = useState<"active" | "inactive" | "deleted">(warehouse?.status || "active");
   const [imageUrl, setImageUrl] = useState(warehouse?.imageUrl || "");
   const [userId, setUserId] = useState<number | string>(warehouse?.userId || currentUserId); // Added userId state
 
@@ -31,16 +31,18 @@ export function WarehouseForm({ isOpen, onClose, warehouse, onSubmit, isLoading,
   useEffect(() => {
     if (warehouse) {
       setName(warehouse.name);
+      // email field is not in warehouse
       setPhone(warehouse.phone || "");
-      setContactPerson(warehouse.contactPerson || "");
+      setContactPerson(warehouse.contactPerson || ""); // Set contactPerson from warehouse data
       setStatus(warehouse.status);
       setImageUrl(warehouse.imageUrl || "");
       setUserId(warehouse.userId); // Set userId from warehouse data
     } else {
       // Reset form for new warehouse
       setName("");
+      // email field is not in warehouse
       setPhone("");
-      setContactPerson("");
+      setContactPerson(""); // Reset contactPerson for new warehouse
       setStatus("active");
       setImageUrl("");
       setUserId(currentUserId); // Set default userId for new warehouse
@@ -77,8 +79,9 @@ export function WarehouseForm({ isOpen, onClose, warehouse, onSubmit, isLoading,
       name,
       contactPerson: contactPerson || null,
       phone: phone || null,
+      status,
       imageUrl: imageUrl || null,
-      userId: parsedUserId, // Ensure userId is a number
+      userId: parsedUserId,
     };
     
     await onSubmit(dataToSend, warehouse?.id);
@@ -89,7 +92,7 @@ export function WarehouseForm({ isOpen, onClose, warehouse, onSubmit, isLoading,
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>{warehouse ? "Edit Warehouse" : "Add New Warehouse"}</DialogTitle>
+          <DialogTitle>{warehouse ? "Edit Warehouse" : "Add New Warehouse"}</DialogTitle> {/* Changed title */}
         </DialogHeader>
         <form onSubmit={handleSubmit} className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
@@ -105,8 +108,9 @@ export function WarehouseForm({ isOpen, onClose, warehouse, onSubmit, isLoading,
             />
             {nameError && <p className="col-span-4 text-red-500 text-sm -mt-2">{nameError}</p>} {/* Display error */}
           </div>
+          {/* Removed email field */}
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="contactPerson" className="text-right">
+            <Label htmlFor="contactPerson" className="text-right"> 
               Contact Person
             </Label>
             <Input
@@ -172,7 +176,7 @@ export function WarehouseForm({ isOpen, onClose, warehouse, onSubmit, isLoading,
               Cancel
             </Button>
             <Button type="submit" className="bg-orange-500 hover:bg-orange-600 text-white" disabled={isLoading}>
-              {isLoading ? (warehouse ? "Saving..." : "Adding...") : (warehouse ? "Save Changes" : "Add Warehouse")}
+              {isLoading ? (warehouse ? "Saving..." : "Adding...") : (warehouse ? "Save Changes" : "Add Warehouse")} {/* Changed button text */}
             </Button>
           </DialogFooter>
         </form>

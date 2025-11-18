@@ -12,7 +12,7 @@ interface SupplierFormProps {
   isOpen: boolean;
   onClose: () => void;
   supplier?: Supplier; // Optional supplier object for editing
-  onSubmit: (supplier: Omit<Supplier, 'id' | 'createdAt' | 'code' | 'email' | 'companyName' | 'role'> & { email?: string; imageUrl?: string | null; }, id?: string) => Promise<void>; // Updated for Supplier
+  onSubmit: (supplier: Omit<Supplier, 'id' | 'createdAt' | 'code' | 'companyName' | 'role'> & { email: string; imageUrl?: string | null; status: "active" | "inactive"; }, id?: string) => Promise<void>; // Updated for Supplier
   isLoading: boolean;
 }
 
@@ -50,8 +50,8 @@ export function SupplierForm({ isOpen, onClose, supplier, onSubmit, isLoading }:
     e.preventDefault();
     // Only include email if adding a new supplier
     const supplierData = !supplier
-      ? { name, email, phone, country, status, imageUrl }
-      : { name, phone, country, status, imageUrl };
+      ? { name, email, phone, country, status, imageUrl } as (Omit<Supplier, 'id' | 'createdAt' | 'code' | 'companyName' | 'role'> & { email: string; imageUrl?: string | null; status: "active" | "inactive"; })
+      : { name, phone, country, status, imageUrl } as (Omit<Supplier, 'id' | 'createdAt' | 'code' | 'companyName' | 'role'> & { email?: string; imageUrl?: string | null; status: "active" | "inactive"; });
     await onSubmit(supplierData, supplier?.id);
     onClose();
   };

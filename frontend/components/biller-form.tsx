@@ -12,7 +12,7 @@ interface BillerFormProps {
   isOpen: boolean;
   onClose: () => void;
   biller?: Biller; // Optional biller object for editing
-  onSubmit: (biller: Omit<Biller, 'id' | 'createdAt' | 'code'> & { email?: string; companyName?: string | null; imageUrl?: string | null; }, id?: string) => Promise<void>; // Updated for Biller
+  onSubmit: (biller: Omit<Biller, 'id' | 'createdAt' | 'code'> & { email: string; companyName?: string | null; imageUrl?: string | null; status: "active" | "inactive"; }, id?: string) => Promise<void>; // Updated for Biller
   isLoading: boolean;
 }
 
@@ -49,8 +49,8 @@ export function BillerForm({ isOpen, onClose, biller, onSubmit, isLoading }: Bil
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const billerData = !biller
-      ? { name, email, phone, country, companyName, status, imageUrl }
-      : { name, phone, country, companyName, status, imageUrl };
+      ? { name, email, phone, country, companyName, status, imageUrl } as (Omit<Biller, 'id' | 'createdAt' | 'code'> & { email: string; companyName?: string | null; imageUrl?: string | null; status: "active" | "inactive"; })
+      : { name, phone, country, companyName, status, imageUrl } as (Omit<Biller, 'id' | 'createdAt' | 'code'> & { email?: string; companyName?: string | null; imageUrl?: string | null; status: "active" | "inactive"; });
     await onSubmit(billerData, biller?.id);
     onClose();
   };
